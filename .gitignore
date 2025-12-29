@@ -87,3 +87,7 @@ site/
 
 # MCP Server Configuration (contains API keys - DO NOT COMMIT)
 .mcp.json
+glm_settings.json
+
+# Claude Code local settings (may contain tokens)
+.claude/settings.local.json
