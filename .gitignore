@@ -76,3 +76,6 @@ coverage.xml
 
 # Temporary files
 nul
+
+# MCP Server Configuration (contains API keys - DO NOT COMMIT)
+.mcp.json
