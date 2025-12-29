@@ -192,14 +192,14 @@ The `get_settings()` function uses LRU cache to ensure only one Settings instanc
 
 #### `UPDATE_INTERVAL_MINUTES`
 - **Type**: Integer
-- **Default**: `30`
+- **Default**: `5`
 - **Description**: Interval between automatic news updates (in minutes)
-- **Example**: `15` (every 15 minutes), `60` (hourly)
+- **Example**: `10` (every 10 minutes), `15` (every 15 minutes), `30` (every 30 minutes)
 - **Required**: No
 - **Recommendations**:
-  - Production: 30-60 minutes
-  - Development: 15-30 minutes
-  - High-traffic: 10-15 minutes
+  - Production: 5-15 minutes (default: 5)
+  - Development: 5-10 minutes
+  - High-traffic: 5-10 minutes
 - **Notes**: Shorter intervals = more API load, fresher content
 
 ---
@@ -353,8 +353,8 @@ RELOAD=false
 # Update Scheduling
 # ----------------------------------------------------------------------------
 # Interval between automatic news updates (minutes)
-# Recommended: 30-60 for production, 15-30 for development
-UPDATE_INTERVAL_MINUTES=30
+# Recommended: 5-15 for production, 5-10 for development
+UPDATE_INTERVAL_MINUTES=5
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -410,7 +410,7 @@ services:
       - LOG_LEVEL=INFO
 
       # Scheduling
-      - UPDATE_INTERVAL_MINUTES=30
+      - UPDATE_INTERVAL_MINUTES=5
 
       # RSS Configuration
       - RSS_FEED_TITLE=League of Legends News
@@ -521,7 +521,7 @@ RELOAD=false
 LOG_LEVEL=WARNING
 
 # Update schedule (balanced)
-UPDATE_INTERVAL_MINUTES=30
+UPDATE_INTERVAL_MINUTES=5
 
 # Caching (optimized for performance)
 CACHE_TTL_SECONDS=21600
@@ -575,7 +575,7 @@ SUPPORTED_LOCALES=en-us,it-it
 
 2. **Adjust update interval**
    ```bash
-   UPDATE_INTERVAL_MINUTES=60  # Hourly updates (reduce API load)
+   UPDATE_INTERVAL_MINUTES=15  # Less frequent updates (reduce API load)
    ```
 
 3. **Limit RSS items**
@@ -642,8 +642,8 @@ RELOAD=true  # Hot reload enabled
 # Logging (verbose)
 LOG_LEVEL=DEBUG
 
-# Update schedule (frequent for testing)
-UPDATE_INTERVAL_MINUTES=15
+# Update schedule (default for development)
+UPDATE_INTERVAL_MINUTES=5
 
 # Caching (shorter TTLs for testing)
 CACHE_TTL_SECONDS=3600         # 1 hour
@@ -681,9 +681,9 @@ SUPPORTED_LOCALES=en-us
    FEED_CACHE_TTL=60  # Test cache expiration quickly
    ```
 
-4. **Frequent Updates**
+4. **Default Update Frequency**
    ```bash
-   UPDATE_INTERVAL_MINUTES=15  # Test scheduler behavior
+   UPDATE_INTERVAL_MINUTES=5  # Test scheduler behavior with default
    ```
 
 ### Local Development Without Docker
@@ -971,7 +971,7 @@ FEED_DESCRIPTION_EN=Latest League of Legends news and updates
 FEED_DESCRIPTION_IT=Ultime notizie e aggiornamenti di League of Legends
 
 # Scheduling
-UPDATE_INTERVAL_MINUTES=30
+UPDATE_INTERVAL_MINUTES=5
 ```
 
 ### Example 3: High-Performance Configuration
@@ -1030,8 +1030,8 @@ FEED_CACHE_TTL=60
 # RSS
 RSS_MAX_ITEMS=50
 
-# Scheduling (frequent updates)
-UPDATE_INTERVAL_MINUTES=15
+# Scheduling (default updates)
+UPDATE_INTERVAL_MINUTES=5
 ```
 
 ### Example 5: Multi-Language Configuration
@@ -1099,12 +1099,12 @@ Hypothetical migration example:
 UPDATE_INTERVAL=1800  # seconds
 
 # New configuration (v2.0)
-UPDATE_INTERVAL_MINUTES=30  # minutes
+UPDATE_INTERVAL_MINUTES=5  # minutes (default changed to 5)
 ```
 
 Migration steps:
-1. Convert seconds to minutes: `1800 / 60 = 30`
-2. Update .env: `UPDATE_INTERVAL_MINUTES=30`
+1. Convert seconds to minutes: `1800 / 60 = 30` (old default was 30, new is 5)
+2. Update .env: `UPDATE_INTERVAL_MINUTES=5` (or your preferred value)
 3. Remove old setting: `UPDATE_INTERVAL`
 
 ### Configuration Version Tracking

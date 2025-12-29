@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     reload: bool = False  # Set True for development
 
     # Update scheduling
-    update_interval_minutes: int = 30
+    update_interval_minutes: int = 5
 
     # Logging
     log_level: str = "INFO"

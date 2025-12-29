@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+    <meta name="description" content="Latest League of Legends news and updates from official sources">
+    <title>League of Legends News - LoL Stonks RSS</title>
+    <style>
+        :root {
+            /* LoL Brand Colors */
+            --lol-gold: #C89B3C;
+            --lol-blue: #0AC8B9;
+            --lol-dark-blue: #0A1428;
+            --lol-medium-blue: #0F2041;
+            --lol-light-blue: #1E3A5F;
+            --lol-text: #F0E6D2;
+            --lol-text-secondary: #C8AA6E;
+            --lol-border: #785A28;
+
+            /* Light mode colors */
+            --light-bg: #FFFFFF;
+            --light-card-bg: #F8F9FA;
+            --light-text: #1A1A1A;
+            --light-text-secondary: #666666;
+            --light-border: #E0E0E0;
+
+            /* Current theme */
+            --bg-color: var(--lol-dark-blue);
+            --card-bg: var(--lol-medium-blue);
+            --text-color: var(--lol-text);
+            --text-secondary: var(--lol-text-secondary);
+            --border-color: var(--lol-border);
+            --accent-color: var(--lol-gold);
+            --accent-hover: #d4a747;
+        }
+
+        [data-theme="light"] {
+            --bg-color: var(--light-bg);
+            --card-bg: var(--light-card-bg);
+            --text-color: var(--light-text);
+            --text-secondary: var(--light-text-secondary);
+            --border-color: var(--light-border);
+            --accent-color: #C89B3C;
+            --accent-hover: #b88930;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--lol-dark-blue) 0%, var(--lol-medium-blue) 100%);
+            border-bottom: 3px solid var(--lol-gold);
+            padding: 2rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        [data-theme="light"] .header {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F0F0F0 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--lol-gold);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--accent-color);
+            border: none;
+            color: var(--lol-dark-blue);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .rss-link {
+            background: var(--lol-blue);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .rss-link:hover {
+            background: #0bb5a6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-color);
+            color: var(--text-color);
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-color);
+            background: var(--card-bg);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-color);
+            color: var(--lol-dark-blue);
+            border-color: var(--accent-color);
+        }
+
+        .stats {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .news-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        .news-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--lol-medium-blue) 0%, var(--lol-light-blue) 100%);
+        }
+
+        .news-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .news-source {
+            background: var(--accent-color);
+            color: var(--lol-dark-blue);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .news-category {
+            background: var(--lol-blue);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .news-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0.75rem 0;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .news-title a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .news-title a:hover {
+            color: var(--accent-color);
+        }
+
+        .news-description {
+            color: var(--text-secondary);
+            margin: 0.75rem 0;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .news-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer {
+            background: var(--card-bg);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 3px solid var(--lol-gold);
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-links a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-hover);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .theme-toggle,
+            .rss-link {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div>
+                        <a href="#" class="logo">LoL Stonks RSS</a>
+                        <div class="subtitle">League of Legends News Feed</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()">
+                        <span id="theme-icon">Light Mode</span>
+                    </button>
+                    <a href="/feed.xml" class="rss-link">RSS Feed</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="controls">
+            <div class="controls-grid">
+                <input
+                    type="text"
+                    id="searchBox"
+                    class="search-box"
+                    placeholder="Search news articles..."
+                    onkeyup="filterArticles()"
+                >
+                <div class="stats">
+                    <span>Showing <strong id="articleCount">50</strong> articles</span>
+                    <span>|</span>
+                    <span>Last updated: <strong>2025-12-29 13:37:22 UTC</strong></span>
+                </div>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterBySource('all')">All Sources</button>
+                <button class="filter-btn" onclick="filterBySource('lol-en-us')">LOL-EN-US</button>
+                <button class="filter-btn" onclick="filterBySource('lol-it-it')">LOL-IT-IT</button>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterByCategory('all')">All Categories</button>
+                <button class="filter-btn" onclick="filterByCategory('Aggiornamenti di gioco')">Aggiornamenti di gioco</button>
+                <button class="filter-btn" onclick="filterByCategory('Announcements')">Announcements</button>
+                <button class="filter-btn" onclick="filterByCategory('Annunci')">Annunci</button>
+                <button class="filter-btn" onclick="filterByCategory('Community')">Community</button>
+                <button class="filter-btn" onclick="filterByCategory('Dev')">Dev</button>
+                <button class="filter-btn" onclick="filterByCategory('Esports')">Esports</button>
+                <button class="filter-btn" onclick="filterByCategory('Game Updates')">Game Updates</button>
+                <button class="filter-btn" onclick="filterByCategory('Media')">Media</button>
+                <button class="filter-btn" onclick="filterByCategory('Merch')">Merch</button>
+                <button class="filter-btn" onclick="filterByCategory('eSport')">eSport</button>
+            </div>
+        </div>
+
+        <div class="news-grid" id="newsGrid">
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Media"
+                     data-title="summoner’s snowdrift | winter map orchestral music"
+                     data-description="spend the holidays on summoner’s rift with the original orchestral music from the winter map.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/cc1a1592191bcba0566ac60803cd04e97ad943fd-1920x1080.jpg?accountingTag=LoL" alt="Summoner’s Snowdrift | Winter Map Orchestral Music" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Media</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=ETbZsW21qaE" target="_blank" rel="noopener noreferrer">
+                            Summoner’s Snowdrift | Winter Map Orchestral Music
+                        </a>
+                    </h2>
+                    <p class="news-description">Spend the holidays on Summoner’s Rift with the original orchestral music from the winter map.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 17, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="gwen celebration thematic showcase"
+                     data-description="there’s no such thing as too much gwen!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/e7306fb1a9e92c5c1b14bc8466e339813cafdfc3-1920x1080.jpg?accountingTag=LoL" alt="Gwen Celebration Thematic Showcase" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=wDgVBNE1G5w" target="_blank" rel="noopener noreferrer">
+                            Gwen Celebration Thematic Showcase
+                        </a>
+                    </h2>
+                    <p class="news-description">There’s no such thing as too much Gwen!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 17, 2025 at 09:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="vetrina tematica festeggiamenti per gwen"
+                     data-description="più gwen abbiamo, meglio stiamo!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/e7306fb1a9e92c5c1b14bc8466e339813cafdfc3-1920x1080.jpg?accountingTag=LoL" alt="Vetrina tematica Festeggiamenti per Gwen" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=VNPKk48Y-EM" target="_blank" rel="noopener noreferrer">
+                            Vetrina tematica Festeggiamenti per Gwen
+                        </a>
+                    </h2>
+                    <p class="news-description">Più Gwen abbiamo, meglio stiamo!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 17, 2025 at 09:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Esports"
+                     data-title="nacl updates for 2026"
+                     data-description="north america’s path to pro is back!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/0901c38a6a98783d3972102df07528a620bd6fca-1920x1080.jpg?accountingTag=LoL" alt="NACL Updates for 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Esports</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://lolesports.com/en-us/news/nacl-updates-for-2026" target="_blank" rel="noopener noreferrer">
+                            NACL Updates for 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">North America’s Path To Pro Is Back!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 16, 2025 at 06:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="eSport"
+                     data-title="introduzione al lec versus 2026"
+                     data-description="ecco tutto quello che c&#39;è da sapere sul lec versus con slot ospite per karmine corp blue e los ratones.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/dd6070dbcd0a020eabbd9d0fecc26a72c18c360a-3840x2160.jpg?accountingTag=LoL" alt="Introduzione al LEC Versus 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">eSport</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://lolesports.com/it-it/news/lec-versus-2026-primer" target="_blank" rel="noopener noreferrer">
+                            Introduzione al LEC Versus 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Ecco tutto quello che c&#39;è da sapere sul LEC Versus con slot ospite per Karmine Corp Blue e Los Ratones.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 16, 2025 at 03:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="chibi gwen celebration mini cinematic"
+                     data-description="it’s time to celebrate all things gwen with the arrival of chibi crystal rose gwen and more!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/455e9f9adf049d0817503be520cb517697b98c99-1920x1080.jpg?accountingTag=LoL" alt="Chibi Gwen Celebration Mini Cinematic" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=6eDwvf_OHqE" target="_blank" rel="noopener noreferrer">
+                            Chibi Gwen Celebration Mini Cinematic
+                        </a>
+                    </h2>
+                    <p class="news-description">It’s time to celebrate all things Gwen with the arrival of Chibi Crystal Rose Gwen and more!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 15, 2025 at 02:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="off to the races | lunar revel 2026 event tease"
+                     data-description="eyes on the prize! 😤😤😤 charge into the new year with revival: festival of beasts, returning january 22!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/6ab190c47086112edad7b7073cc4b4d195630177-1920x1080.jpg?accountingTag=LoL" alt="Off to the Races | Lunar Revel 2026 Event Tease" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=xyy5WMuXU3M" target="_blank" rel="noopener noreferrer">
+                            Off to the Races | Lunar Revel 2026 Event Tease
+                        </a>
+                    </h2>
+                    <p class="news-description">Eyes on the prize! 😤😤😤 Charge into the new year with Revival: Festival of Beasts, returning January 22!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 14, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="andiamo alle corse | teaser evento festa della luna 2026"
+                     data-description="occhi sull&#39;obiettivo! 😤😤😤 lanciatevi nel nuovo anno con revival: festival delle belve, di nuovo disponibile dal 22 gennaio!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/6ab190c47086112edad7b7073cc4b4d195630177-1920x1080.jpg?accountingTag=LoL" alt="Andiamo alle corse | Teaser evento Festa della Luna 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=8I1Gyq1eeuc" target="_blank" rel="noopener noreferrer">
+                            Andiamo alle corse | Teaser evento Festa della Luna 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Occhi sull&#39;obiettivo! 😤😤😤 Lanciatevi nel nuovo anno con Revival: Festival delle belve, di nuovo disponibile dal 22 gennaio!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 14, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="mini filmato festeggiamenti per mini gwen"
+                     data-description="festeggiamo gwen a 360° con l&#39;arrivo di mini gwen rosa di cristallo e altro ancora!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/455e9f9adf049d0817503be520cb517697b98c99-1920x1080.jpg?accountingTag=LoL" alt="Mini filmato Festeggiamenti per Mini Gwen" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=Wmgm3dO5cHA" target="_blank" rel="noopener noreferrer">
+                            Mini filmato Festeggiamenti per Mini Gwen
+                        </a>
+                    </h2>
+                    <p class="news-description">Festeggiamo Gwen a 360° con l&#39;arrivo di Mini Gwen Rosa di cristallo e altro ancora!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 14, 2025 at 01:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Dev"
+                     data-title="what’s next in 2026"
+                     data-description="geoff and peter sit down with us to reflect and share what’s coming to the convergence in 2026.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/ec32c56e3478062082bf7cc25c153298ea15098c-1920x1080.jpg?accountingTag=LoL" alt="What’s Next in 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=M9apBMca7s8" target="_blank" rel="noopener noreferrer">
+                            What’s Next in 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Geoff and Peter sit down with us to reflect and share what’s coming to the Convergence in 2026.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 14, 2025 at 12:45 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Dev"
+                     data-title="le novità del 2026"
+                     data-description="geoff e peter riflettono e condividono con noi le novità in arrivo nella convergenza nel 2026.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/ec32c56e3478062082bf7cc25c153298ea15098c-1920x1080.jpg?accountingTag=LoL" alt="Le novità del 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=jvTQyZYTfHc" target="_blank" rel="noopener noreferrer">
+                            Le novità del 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Geoff e Peter riflettono e condividono con noi le novità in arrivo nella Convergenza nel 2026.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 14, 2025 at 12:45 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="lore &amp; legends champion highlight trailer"
+                     data-description="check out which moves your favorite champions will be fielding in lore &amp; legends.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/e44a91304f4e1b19e95ca4bb966a7bb3b447fc66-1920x1080.jpg?accountingTag=LoL" alt="Lore &amp; Legends Champion Highlight Trailer" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=U8gAgfimpzE" target="_blank" rel="noopener noreferrer">
+                            Lore &amp; Legends Champion Highlight Trailer
+                        </a>
+                    </h2>
+                    <p class="news-description">Check out which moves your favorite champions will be fielding in Lore &amp; Legends.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 04, 2025 at 02:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="tráiler de campeones destacados"
+                     data-description="date un&#39;occhiata alle mosse con cui vi stupiranno i vostri campioni preferiti in storia e leggende.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/e44a91304f4e1b19e95ca4bb966a7bb3b447fc66-1920x1080.jpg?accountingTag=LoL" alt="Tráiler de campeones destacados" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=JK09ilv9PYw" target="_blank" rel="noopener noreferrer">
+                            Tráiler de campeones destacados
+                        </a>
+                    </h2>
+                    <p class="news-description">Date un&#39;occhiata alle mosse con cui vi stupiranno i vostri campioni preferiti in Storia e leggende.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 04, 2025 at 02:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="teamfight tactics: lore &amp; legends"
+                     data-description="reawaken iconic runeterran stories in tft’s biggest set yet!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/8309c4b233c43f0af18045d20f86102028b92ef4-1920x1080.jpg?accountingTag=LoL" alt="Teamfight Tactics: Lore &amp; Legends" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://teamfighttactics.leagueoflegends.com/en-us/set-overview/teamfight-tactics-lore-and-legends" target="_blank" rel="noopener noreferrer">
+                            Teamfight Tactics: Lore &amp; Legends
+                        </a>
+                    </h2>
+                    <p class="news-description">Reawaken iconic Runeterran stories in TFT’s biggest set yet!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 03, 2025 at 08:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="teamfight tactics: storia e leggende"
+                     data-description="risvegliate le iconiche storie di runeterra nel set di tft più grande di sempre!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/8309c4b233c43f0af18045d20f86102028b92ef4-1920x1080.jpg?accountingTag=LoL" alt="Teamfight Tactics: Storia e leggende" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://teamfighttactics.leagueoflegends.com/it-it/set-overview/teamfight-tactics-lore-and-legends" target="_blank" rel="noopener noreferrer">
+                            Teamfight Tactics: Storia e leggende
+                        </a>
+                    </h2>
+                    <p class="news-description">Risvegliate le iconiche storie di Runeterra nel set di TFT più grande di sempre!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 03, 2025 at 08:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="teamfight tactics patch 16.1"
+                     data-description="unlock infinite comps with our new set: lore &amp; legends!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/d90902a844566f927b1e501e31b859ec47b7a2a5-1280x720.jpg?accountingTag=LoL" alt="Teamfight Tactics patch 16.1" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/teamfight-tactics-patch-16-1" target="_blank" rel="noopener noreferrer">
+                            Teamfight Tactics patch 16.1
+                        </a>
+                    </h2>
+                    <p class="news-description">Unlock infinite comps with our new set: Lore &amp; Legends!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 07:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="patch 25.24 notes"
+                     data-description="the last patch of the year, 25.24 is here!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/548a7d55665e65a76ffe98a155f3e188afe0053b-1920x1080.jpg?accountingTag=LoL" alt="Patch 25.24 Notes" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/en-us/news/game-updates/patch-25-24-notes" target="_blank" rel="noopener noreferrer">
+                            Patch 25.24 Notes
+                        </a>
+                    </h2>
+                    <p class="news-description">The last patch of the year, 25.24 is here!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 07:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="note sulla patch 16.1 di tft"
+                     data-description="sbloccate configurazioni infinite con il nuovo set: storia e leggende!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/d90902a844566f927b1e501e31b859ec47b7a2a5-1280x720.jpg?accountingTag=LoL" alt="Note sulla patch 16.1 di TFT" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://teamfighttactics.leagueoflegends.com/it-it/news/game-updates/teamfight-tactics-patch-16-1" target="_blank" rel="noopener noreferrer">
+                            Note sulla patch 16.1 di TFT
+                        </a>
+                    </h2>
+                    <p class="news-description">Sbloccate configurazioni infinite con il nuovo set: Storia e leggende!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 07:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="note sulla patch 25.24"
+                     data-description="arriva l&#39;ultima patch dell&#39;anno, la patch 25.24!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/548a7d55665e65a76ffe98a155f3e188afe0053b-1920x1080.jpg?accountingTag=LoL" alt="Note sulla patch 25.24" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/it-it/news/game-updates/patch-25-24-notes" target="_blank" rel="noopener noreferrer">
+                            Note sulla patch 25.24
+                        </a>
+                    </h2>
+                    <p class="news-description">Arriva l&#39;ultima patch dell&#39;anno, la patch 25.24!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 07:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="lore &amp; legends cosmetics overview"
+                     data-description="explore runeterra across the eras, and do it in style with new tacticians, arenas, and more!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/7f18ef41b2a2527830c1fdcb5c641b392a4dcc91-1920x1080.jpg?accountingTag=LoL" alt="Lore &amp; Legends Cosmetics Overview" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/lore-and-legends-cosmetics-overview/" target="_blank" rel="noopener noreferrer">
+                            Lore &amp; Legends Cosmetics Overview
+                        </a>
+                    </h2>
+                    <p class="news-description">Explore Runeterra across the eras, and do it in style with new Tacticians, Arenas, and more!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 05:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="panoramica contenuti grafici di storia e leggende"
+                     data-description="esplorate le varie epoche di runeterra con stile grazie a nuovi strateghi, arene e molto altro!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/7f18ef41b2a2527830c1fdcb5c641b392a4dcc91-1920x1080.jpg?accountingTag=LoL" alt="Panoramica contenuti grafici di Storia e leggende" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://teamfighttactics.leagueoflegends.com/it-it/news/game-updates/lore-and-legends-cosmetics-overview/" target="_blank" rel="noopener noreferrer">
+                            Panoramica contenuti grafici di Storia e leggende
+                        </a>
+                    </h2>
+                    <p class="news-description">Esplorate le varie epoche di Runeterra con stile grazie a nuovi Strateghi, Arene e molto altro!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 05:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="lorefinder progression explained"
+                     data-description="tft’s biggest set has a lot of unlockable champs to keep track of. here’s how to do it!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/29532c0dbb0338a483745064196e9bf87fb86ec3-1920x1080.jpg?accountingTag=LoL" alt="Lorefinder Progression Explained" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=mHpMP8dcvQE" target="_blank" rel="noopener noreferrer">
+                            Lorefinder Progression Explained
+                        </a>
+                    </h2>
+                    <p class="news-description">TFT’s biggest set has a lot of Unlockable champs to keep track of. Here’s how to do it!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="spiegazione progressi trovastorie"
+                     data-description="il più grande set di tft ha tantissimi campioni sbloccabili di cui tenere traccia. ecco come fare!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/29532c0dbb0338a483745064196e9bf87fb86ec3-1920x1080.jpg?accountingTag=LoL" alt="Spiegazione progressi Trovastorie" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=nORrcHMToj0" target="_blank" rel="noopener noreferrer">
+                            Spiegazione progressi Trovastorie
+                        </a>
+                    </h2>
+                    <p class="news-description">Il più grande set di TFT ha tantissimi campioni sbloccabili di cui tenere traccia. Ecco come fare!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 02, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Dev"
+                     data-title="dev update: season 1 2026 theme, gameplay &amp; more"
+                     data-description="pabro and meddler talk about season 1 2026, including theme, gameplay, swiftplay, wasd, and more.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/db481e5be34d32ceed87d4747e3bf5b4fef876db-1280x720.jpg?accountingTag=LoL" alt="Dev Update: Season 1 2026 Theme, Gameplay &amp; More" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=R5Ff-0aUpIk" target="_blank" rel="noopener noreferrer">
+                            Dev Update: Season 1 2026 Theme, Gameplay &amp; More
+                        </a>
+                    </h2>
+                    <p class="news-description">Pabro and Meddler talk about Season 1 2026, including theme, gameplay, Swiftplay, WASD, and more.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:05 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Dev"
+                     data-title="agg. dev - stagione 1 2026: tema, gameplay e altro"
+                     data-description="pabro e meddler ci parlano della stagione 1 2026: tema, gameplay, partita veloce, wasd e altro.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/db481e5be34d32ceed87d4747e3bf5b4fef876db-1280x720.jpg?accountingTag=LoL" alt="Agg. dev - Stagione 1 2026: tema, gameplay e altro" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=6CRF6XvCnig" target="_blank" rel="noopener noreferrer">
+                            Agg. dev - Stagione 1 2026: tema, gameplay e altro
+                        </a>
+                    </h2>
+                    <p class="news-description">Pabro e Meddler ci parlano della Stagione 1 2026: tema, gameplay, Partita veloce, WASD e altro.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:05 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Community"
+                     data-title="community art spotlight - for demacia!"
+                     data-description="fan forged cosplay and fan art.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/5c6572af89e3c81dfcc214aebc36a650885cc18c-1000x563.jpg?accountingTag=LoL" alt="Community Art Spotlight - For Demacia!" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Community</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/en-us/news/community/community-art-spotlight-for-demacia" target="_blank" rel="noopener noreferrer">
+                            Community Art Spotlight - For Demacia!
+                        </a>
+                    </h2>
+                    <p class="news-description">Fan forged cosplay and fan art.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Dev"
+                     data-title="tl;dw: s1 2026 theme, gameplay &amp; more dev update"
+                     data-description="a short rundown of changes from today’s dev update.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/cd691538b73fbeeaf0f5abdcda440e1b02e79a97-1920x1080.jpg?accountingTag=LoL" alt="TL;DW: S1 2026 Theme, Gameplay &amp; More Dev Update" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/en-us/news/dev/tldw-s1-2026-theme-gameplay-more-dev-update" target="_blank" rel="noopener noreferrer">
+                            TL;DW: S1 2026 Theme, Gameplay &amp; More Dev Update
+                        </a>
+                    </h2>
+                    <p class="news-description">A short rundown of changes from today’s Dev Update.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Dev"
+                     data-title="/dev: 2026 season one gameplay preview"
+                     data-description="a preview of the gameplay changes coming to summoner’s rift in 2026.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/209728ebaf2c2af1d838bea73bf5a2451a43a102-1838x1034.jpg?accountingTag=LoL" alt="/dev: 2026 Season One Gameplay Preview" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/en-us/news/dev/dev-2026-season-one-gameplay-preview" target="_blank" rel="noopener noreferrer">
+                            /dev: 2026 Season One Gameplay Preview
+                        </a>
+                    </h2>
+                    <p class="news-description">A preview of the gameplay changes coming to Summoner’s Rift in 2026.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Dev"
+                     data-title="/dev: a swifter swiftplay"
+                     data-description="how we’re speeding things up next year.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/ddc3d513813255709e804d6ec251642dbc4c5d16-1920x1080.jpg?accountingTag=LoL" alt="/dev: A Swifter Swiftplay" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/en-us/news/dev/dev-a-swifter-swiftplay" target="_blank" rel="noopener noreferrer">
+                            /dev: A Swifter Swiftplay
+                        </a>
+                    </h2>
+                    <p class="news-description">How we’re speeding things up next year.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Dev"
+                     data-title="/dev: ranked 2026"
+                     data-description="competitive changes for the new year.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/103cb09220c1bce460351a268c4be16bcf1ea28a-1920x1080.jpg?accountingTag=LoL" alt="/dev: Ranked 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/en-us/news/dev/dev-ranked-2026" target="_blank" rel="noopener noreferrer">
+                            /dev: Ranked 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Competitive changes for the new year.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Dev"
+                     data-title="in breve: agg. dev s1 2026: tema, gameplay e altro"
+                     data-description="un breve riepilogo dei cambiamenti mostrati nell&#39;aggiornamento /dev di oggi.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/cd691538b73fbeeaf0f5abdcda440e1b02e79a97-1920x1080.jpg?accountingTag=LoL" alt="In breve: Agg. dev S1 2026: tema, gameplay e altro" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/it-it/news/dev/tldw-s1-2026-theme-gameplay-more-dev-update" target="_blank" rel="noopener noreferrer">
+                            In breve: Agg. dev S1 2026: tema, gameplay e altro
+                        </a>
+                    </h2>
+                    <p class="news-description">Un breve riepilogo dei cambiamenti mostrati nell&#39;Aggiornamento /dev di oggi.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Dev"
+                     data-title="/dev: una partita ancora più veloce"
+                     data-description="ecco come renderemo tutto più veloce il prossimo anno.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/ddc3d513813255709e804d6ec251642dbc4c5d16-1920x1080.jpg?accountingTag=LoL" alt="/dev: Una Partita ancora più veloce" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/it-it/news/dev/dev-a-swifter-swiftplay" target="_blank" rel="noopener noreferrer">
+                            /dev: Una Partita ancora più veloce
+                        </a>
+                    </h2>
+                    <p class="news-description">Ecco come renderemo tutto più veloce il prossimo anno.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Dev"
+                     data-title="/dev: anteprima gameplay stagione uno 2026"
+                     data-description="un&#39;anteprima delle modifiche al gameplay in arrivo sulla landa degli evocatori nel 2026.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/209728ebaf2c2af1d838bea73bf5a2451a43a102-1838x1034.jpg?accountingTag=LoL" alt="/dev: Anteprima gameplay Stagione Uno 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/it-it/news/dev/dev-2026-season-one-gameplay-preview" target="_blank" rel="noopener noreferrer">
+                            /dev: Anteprima gameplay Stagione Uno 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Un&#39;anteprima delle modifiche al gameplay in arrivo sulla Landa degli evocatori nel 2026.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Community"
+                     data-title="vetrina artistica della community - per demacia!"
+                     data-description="cosplay e fan art creati dalla community.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/5c6572af89e3c81dfcc214aebc36a650885cc18c-1000x563.jpg?accountingTag=LoL" alt="Vetrina artistica della community - Per Demacia!" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Community</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/it-it/news/community/community-art-spotlight-for-demacia" target="_blank" rel="noopener noreferrer">
+                            Vetrina artistica della community - Per Demacia!
+                        </a>
+                    </h2>
+                    <p class="news-description">Cosplay e fan art creati dalla community.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Dev"
+                     data-title="/dev: classificate 2026"
+                     data-description="modifiche competitive per il nuovo anno.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/103cb09220c1bce460351a268c4be16bcf1ea28a-1920x1080.jpg?accountingTag=LoL" alt="/dev: Classificate 2026" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Dev</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="/it-it/news/dev/dev-ranked-2026" target="_blank" rel="noopener noreferrer">
+                            /dev: Classificate 2026
+                        </a>
+                    </h2>
+                    <p class="news-description">Modifiche competitive per il nuovo anno.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>December 01, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="chibi dark cosmic lux showcase"
+                     data-description="a final choice. one last chance. cosmic rainbow-vomit… or eternal dark?">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/1f785fb87e543b191826c7ac5a7932e4d654aa54-1920x1080.jpg?accountingTag=LoL" alt="Chibi Dark Cosmic Lux Showcase" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=Ta7iSEL1rGk" target="_blank" rel="noopener noreferrer">
+                            Chibi Dark Cosmic Lux Showcase
+                        </a>
+                    </h2>
+                    <p class="news-description">A final choice. One last chance. Cosmic rainbow-vomit… or eternal dark?</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 30, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="vetrina mini lux oscurità cosmica"
+                     data-description="una scelta definitiva. un&#39;ultima occasione. arcobaleni cosmici o eterna oscurità?">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/1f785fb87e543b191826c7ac5a7932e4d654aa54-1920x1080.jpg?accountingTag=LoL" alt="Vetrina Mini Lux Oscurità Cosmica" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=zmxIVRnDQig" target="_blank" rel="noopener noreferrer">
+                            Vetrina Mini Lux Oscurità Cosmica
+                        </a>
+                    </h2>
+                    <p class="news-description">Una scelta definitiva. Un&#39;ultima occasione. Arcobaleni cosmici o eterna oscurità?</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 30, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="eSport"
+                     data-title="erl stagione 2026 date, leghe e aggiornamenti chiave"
+                     data-description="ecco tutto quello che c&#39;è da sapere sulle erl stagione 2026, incluse date, nuove regole e lec versus.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/0cbcb032cb9fd77578825efd3bd12dd911b9280b-1920x1080.jpg?accountingTag=LoL" alt="ERL Stagione 2026 Date, leghe e aggiornamenti chiave" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">eSport</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://lolesports.com/it-it/news/2026-erl-season-dates-leagues-and-key-updates" target="_blank" rel="noopener noreferrer">
+                            ERL Stagione 2026 Date, leghe e aggiornamenti chiave
+                        </a>
+                    </h2>
+                    <p class="news-description">Ecco tutto quello che c&#39;è da sapere sulle ERL Stagione 2026, incluse date, nuove regole e LEC Versus.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 27, 2025 at 03:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="fields of volrachnun arena mini cinematic"
+                     data-description="intent on being the first little legend worthy of wolf’s notice, burno braces for battle.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/8f7efde8f06e6c918d9a3a1d72665a6eeea0e888-1920x1080.jpg?accountingTag=LoL" alt="Fields of Volrachnun Arena Mini Cinematic" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=qsgAfQzw9CQ" target="_blank" rel="noopener noreferrer">
+                            Fields of Volrachnun Arena Mini Cinematic
+                        </a>
+                    </h2>
+                    <p class="news-description">Intent on being the first Little Legend worthy of Wolf’s notice, Burno braces for battle.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 27, 2025 at 03:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="arena campi del volrachnun - mini-filmato"
+                     data-description="per diventare la prima mini leggenda degna del lupo, burno si prepara alla battaglia.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/8f7efde8f06e6c918d9a3a1d72665a6eeea0e888-1920x1080.jpg?accountingTag=LoL" alt="Arena Campi del Volrachnun - Mini-filmato" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=PKyjs324a1M" target="_blank" rel="noopener noreferrer">
+                            Arena Campi del Volrachnun - Mini-filmato
+                        </a>
+                    </h2>
+                    <p class="news-description">Per diventare la prima Mini Leggenda degna del Lupo, Burno si prepara alla battaglia.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 27, 2025 at 03:00 AM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="god-king darius unbound mini cinematic"
+                     data-description="the wolves are at your door…">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/4834cd06c2d17f64a298839256715cd268aecf47-1920x1080.jpg?accountingTag=LoL" alt="God-King Darius Unbound Mini Cinematic" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=cGcJckq7ThA" target="_blank" rel="noopener noreferrer">
+                            God-King Darius Unbound Mini Cinematic
+                        </a>
+                    </h2>
+                    <p class="news-description">The wolves are at your door…</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 26, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="mini filmato darius dio re senza vincoli"
+                     data-description="i lupi sono alle porte...">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/4834cd06c2d17f64a298839256715cd268aecf47-1920x1080.jpg?accountingTag=LoL" alt="Mini filmato Darius Dio Re Senza vincoli" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=4wz7OF_VTOM" target="_blank" rel="noopener noreferrer">
+                            Mini filmato Darius Dio Re Senza vincoli
+                        </a>
+                    </h2>
+                    <p class="news-description">I lupi sono alle porte...</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 26, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="how to: dominate with zaahen"
+                     data-description="master your zaahen to dominate top lane and beyond with the ultimate guide from skill-capped.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/92015bd251f40a76c963fa06d5ee9c4afd8891de-1920x1080.jpg?accountingTag=LoL" alt="How To: Dominate with Zaahen" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=qQNuoySpVMc" target="_blank" rel="noopener noreferrer">
+                            How To: Dominate with Zaahen
+                        </a>
+                    </h2>
+                    <p class="news-description">Master your Zaahen to dominate top lane and beyond with the ultimate guide from Skill-Capped.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 24, 2025 at 07:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Announcements"
+                     data-title="k/da ahri unbound showcase"
+                     data-description="k/da ahri unbound takes the stage in tft: lore &amp; legends on dec 3!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/8bbafd5aa09d87dc200d08ec2f3c81c11eaf0955-1920x1080.jpg?accountingTag=LoL" alt="K/DA Ahri Unbound Showcase" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Announcements</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=7iFW2LbF0jw" target="_blank" rel="noopener noreferrer">
+                            K/DA Ahri Unbound Showcase
+                        </a>
+                    </h2>
+                    <p class="news-description">K/DA Ahri Unbound takes the stage in TFT: Lore &amp; Legends on Dec 3!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 24, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Annunci"
+                     data-title="vetrina ahri k/da senza vincoli"
+                     data-description="ahri k/da senza vincoli sale sul palco per tft: storia e leggende il 3 dicembre!">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/8bbafd5aa09d87dc200d08ec2f3c81c11eaf0955-1920x1080.jpg?accountingTag=LoL" alt="Vetrina Ahri K/DA Senza vincoli" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Annunci</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=2tsB3fDjuK0" target="_blank" rel="noopener noreferrer">
+                            Vetrina Ahri K/DA Senza vincoli
+                        </a>
+                    </h2>
+                    <p class="news-description">Ahri K/DA Senza vincoli sale sul palco per TFT: Storia e leggende il 3 dicembre!</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 24, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Merch"
+                     data-title="arcane brawler vi 1/7 statue"
+                     data-description="celebrate arcane anniversary with the arcane brawler vi 1/7 scale statue, a true collector’s piece.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/e281168fbf40a2fc84b3fb47250ba918e4b9ca31-1920x1080.jpg?accountingTag=LoL" alt="Arcane Brawler Vi 1/7 Statue" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Merch</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://merch.riotgames.com/product/arcane-brawler-vi-statue/?utm_source=leagueoflegends.com&amp;utm_medium=referral&amp;utm_campaign=lol-newsfeed-arcane-anniversary" target="_blank" rel="noopener noreferrer">
+                            Arcane Brawler Vi 1/7 Statue
+                        </a>
+                    </h2>
+                    <p class="news-description">Celebrate Arcane Anniversary with the Arcane Brawler Vi 1/7 Scale Statue, a true collector’s piece.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 21, 2025 at 10:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Media"
+                     data-title="zaahen champion theme"
+                     data-description="steel the mind. temper the flesh. hunt the fallen. listen now to zaahen’s official theme.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/af3f531d6980594b10e33ba01f3c2d9f09e6aba0-1280x720.jpg?accountingTag=LoL" alt="Zaahen Champion Theme" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Media</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=ePVscH1Yi3s" target="_blank" rel="noopener noreferrer">
+                            Zaahen Champion Theme
+                        </a>
+                    </h2>
+                    <p class="news-description">Steel the mind. Temper the flesh. Hunt the Fallen. Listen now to Zaahen’s official theme.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 20, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Media"
+                     data-title="zaahen - musica campione"
+                     data-description="affila la mente. tempra la carne. perseguita i caduti. ascoltate subito il tema musicale ufficiale di zaahen.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/af3f531d6980594b10e33ba01f3c2d9f09e6aba0-1280x720.jpg?accountingTag=LoL" alt="Zaahen - Musica campione" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Media</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=TnH5r27mCf4" target="_blank" rel="noopener noreferrer">
+                            Zaahen - Musica campione
+                        </a>
+                    </h2>
+                    <p class="news-description">Affila la mente. Tempra la carne. Perseguita i caduti. Ascoltate subito il tema musicale ufficiale di Zaahen.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 20, 2025 at 04:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-en-us"
+                     data-categories="Game Updates"
+                     data-title="god king darius unbound &amp; fields of volchranum arena"
+                     data-description="the law of valor is determined by gods and wolves.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/444a23ddf5dbae6754b118f985f0f18414a6f216-1920x1080.jpg?accountingTag=LoL" alt="God King Darius Unbound &amp; Fields of Volchranum Arena" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-en-us</span>
+                        <span class="news-category">Game Updates</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=HEHK1zpA2mI" target="_blank" rel="noopener noreferrer">
+                            God King Darius Unbound &amp; Fields of Volchranum Arena
+                        </a>
+                    </h2>
+                    <p class="news-description">The law of valor is determined by gods and wolves.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 20, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+            <article class="news-card"
+                     data-source="lol-it-it"
+                     data-categories="Aggiornamenti di gioco"
+                     data-title="darius dio re senza vincoli e campi del volrachnun"
+                     data-description="la legge del valore è determinata da lupi e divinità.">
+                <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/444a23ddf5dbae6754b118f985f0f18414a6f216-1920x1080.jpg?accountingTag=LoL" alt="Darius Dio Re Senza vincoli e Campi del Volrachnun" class="news-image" loading="lazy">
+                <div class="news-content">
+                    <div class="news-meta">
+                        <span class="news-source">lol-it-it</span>
+                        <span class="news-category">Aggiornamenti di gioco</span>
+                    </div>
+                    <h2 class="news-title">
+                        <a href="https://www.youtube.com/watch?v=kZVvsoJmoE0" target="_blank" rel="noopener noreferrer">
+                            Darius Dio Re Senza vincoli e Campi del Volrachnun
+                        </a>
+                    </h2>
+                    <p class="news-description">La legge del valore è determinata da lupi e divinità.</p>
+                    <div class="news-footer">
+                        <span>Riot Games</span>
+                        <span>November 20, 2025 at 02:00 PM</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            No articles found matching your search criteria.
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="/feed.xml">Main RSS Feed</a>
+                    <a href="/feed/en-us.xml">English Feed</a>
+                    <a href="/feed/it-it.xml">Italian Feed</a>
+                    <a href="/health">API Health</a>
+                    <a href="https://www.leagueoflegends.com" target="_blank">Official LoL Site</a>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    LoL Stonks RSS - Unofficial League of Legends News Aggregator
+                </p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                    League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentSource = 'all';
+        let currentCategory = 'all';
+
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const themeIcon = document.getElementById('theme-icon');
+            themeIcon.textContent = newTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+        }
+
+        // Load saved theme
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const themeIcon = document.getElementById('theme-icon');
+                themeIcon.textContent = savedTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+            }
+        })();
+
+        // Filter by source
+        function filterBySource(source) {
+            currentSource = source;
+            document.querySelectorAll('.filters button').forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes('filterBySource')) {
+                    btn.classList.remove('active');
+                }
+            });
+            event.target.classList.add('active');
+            filterArticles();
+        }
+
+        // Filter by category
+        function filterByCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.filters button').forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes('filterByCategory')) {
+                    btn.classList.remove('active');
+                }
+            });
+            event.target.classList.add('active');
+            filterArticles();
+        }
+
+        // Filter articles
+        function filterArticles() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const cards = document.querySelectorAll('.news-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const source = card.dataset.source;
+                const categories = card.dataset.categories.split(',');
+                const title = card.dataset.title;
+                const description = card.dataset.description;
+
+                const matchesSource = currentSource === 'all' || source === currentSource;
+                const matchesCategory = currentCategory === 'all' || categories.includes(currentCategory);
+                const matchesSearch = searchTerm === '' ||
+                                    title.includes(searchTerm) ||
+                                    description.includes(searchTerm);
+
+                if (matchesSource && matchesCategory && matchesSearch) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.getElementById('articleCount').textContent = visibleCount;
+            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
