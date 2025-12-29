@@ -5,13 +5,15 @@ This module provides an async HTTP client for fetching news from the
 official League of Legends Next.js API endpoints.
 """
 
-import httpx
-import re
-from typing import List, Optional, Dict, Any
-from datetime import datetime
 import logging
-from src.models import Article, ArticleSource
+import re
+from datetime import datetime
+from typing import Any
+
+import httpx
+
 from src.config import get_settings
+from src.models import Article, ArticleSource
 from src.utils.cache import TTLCache
 
 logger = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ class LoLNewsAPIClient:
     including build ID discovery and article parsing.
     """
 
-    def __init__(self, base_url: Optional[str] = None, cache: Optional[TTLCache] = None) -> None:
+    def __init__(self, base_url: str | None = None, cache: TTLCache | None = None) -> None:
         """
         Initialize the API client.
 
@@ -61,7 +63,7 @@ class LoLNewsAPIClient:
             return cached
 
         # Fetch HTML page
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as client:
             url = f"{self.base_url}/{locale}/news/"
             logger.info(f"Fetching buildId from: {url}")
             response = await client.get(url, follow_redirects=True)
@@ -80,7 +82,7 @@ class LoLNewsAPIClient:
 
         return build_id
 
-    async def fetch_news(self, locale: str = "en-us") -> List[Article]:
+    async def fetch_news(self, locale: str = "en-us") -> list[Article]:
         """
         Fetch news articles for a specific locale.
 
@@ -103,7 +105,7 @@ class LoLNewsAPIClient:
             api_url = f"{self.base_url}/_next/data/{build_id}/{locale}/news.json"
 
             # Fetch JSON data
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as client:
                 logger.info(f"Fetching news from: {api_url}")
                 response = await client.get(api_url, follow_redirects=True)
 
@@ -135,7 +137,7 @@ class LoLNewsAPIClient:
             logger.error(f"Unexpected error fetching news for {locale}: {e}")
             return []
 
-    def _parse_articles(self, data: Dict[str, Any], locale: str) -> List[Article]:
+    def _parse_articles(self, data: dict[str, Any], locale: str) -> list[Article]:
         """
         Parse API response and extract articles.
 
@@ -149,19 +151,16 @@ class LoLNewsAPIClient:
             List of Article instances
         """
         try:
-            blades = data.get('pageProps', {}).get('page', {}).get('blades', [])
+            blades = data.get("pageProps", {}).get("page", {}).get("blades", [])
 
             # Find articleCardGrid blade
-            article_blade = next(
-                (b for b in blades if b.get('type') == 'articleCardGrid'),
-                None
-            )
+            article_blade = next((b for b in blades if b.get("type") == "articleCardGrid"), None)
 
             if not article_blade:
                 logger.warning(f"No articleCardGrid found for {locale}")
                 return []
 
-            items = article_blade.get('items', [])
+            items = article_blade.get("items", [])
             articles = []
 
             for item in items:
@@ -169,7 +168,9 @@ class LoLNewsAPIClient:
                     article = self._transform_to_article(item, locale)
                     articles.append(article)
                 except Exception as e:
-                    logger.error(f"Error transforming article: {e}, item: {item.get('title', 'N/A')}")
+                    logger.error(
+                        f"Error transforming article: {e}, item: {item.get('title', 'N/A')}"
+                    )
                     continue
 
             return articles
@@ -178,7 +179,7 @@ class LoLNewsAPIClient:
             logger.error(f"Error parsing articles: {e}")
             return []
 
-    def _transform_to_article(self, item: Dict[str, Any], locale: str) -> Article:
+    def _transform_to_article(self, item: dict[str, Any], locale: str) -> Article:
         """
         Transform API item to Article object.
 
@@ -193,50 +194,50 @@ class LoLNewsAPIClient:
             ValueError: If required fields are missing
         """
         # Extract URL from action
-        action = item.get('action', {})
-        url = action.get('url') or action.get('payload', {}).get('url', '')
+        action = item.get("action", {})
+        url = action.get("url") or action.get("payload", {}).get("url", "")
 
         if not url:
             raise ValueError("Article URL not found in item")
 
         # Parse published date
-        pub_date_str = item.get('publishedAt', '')
+        pub_date_str = item.get("publishedAt", "")
         if not pub_date_str:
             raise ValueError("Article publishedAt not found in item")
 
-        pub_date = datetime.fromisoformat(pub_date_str.replace('Z', '+00:00'))
+        pub_date = datetime.fromisoformat(pub_date_str.replace("Z", "+00:00"))
 
         # Map locale to ArticleSource
-        source = ArticleSource.LOL_EN_US if locale == 'en-us' else ArticleSource.LOL_IT_IT
+        source = ArticleSource.LOL_EN_US if locale == "en-us" else ArticleSource.LOL_IT_IT
 
         # Extract description
-        description_obj = item.get('description', {})
-        description = description_obj.get('body', '') if isinstance(description_obj, dict) else ''
+        description_obj = item.get("description", {})
+        description = description_obj.get("body", "") if isinstance(description_obj, dict) else ""
 
         # Extract category
-        category_obj = item.get('category', {})
-        category = category_obj.get('title', 'News') if isinstance(category_obj, dict) else 'News'
+        category_obj = item.get("category", {})
+        category = category_obj.get("title", "News") if isinstance(category_obj, dict) else "News"
 
         # Extract GUID from analytics or fallback to URL
-        analytics = item.get('analytics', {})
-        guid = analytics.get('contentId', url) if isinstance(analytics, dict) else url
+        analytics = item.get("analytics", {})
+        guid = analytics.get("contentId", url) if isinstance(analytics, dict) else url
 
         # Extract image URL
-        media = item.get('media', {})
-        image_url = media.get('url') if isinstance(media, dict) else None
+        media = item.get("media", {})
+        image_url = media.get("url") if isinstance(media, dict) else None
 
         # Create Article instance
         article = Article(
-            title=item.get('title', 'No Title'),
+            title=item.get("title", "No Title"),
             url=url,
             pub_date=pub_date,
             guid=guid,
             source=source,
             description=description,
-            content='',  # Full content not available from API
+            content="",  # Full content not available from API
             image_url=image_url,
-            author='Riot Games',
-            categories=[category]
+            author="Riot Games",
+            categories=[category],
         )
 
         return article

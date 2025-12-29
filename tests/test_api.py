@@ -5,7 +5,8 @@ This module tests all HTTP endpoints including feed generation, health checks,
 and error handling.
 """
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -78,8 +79,8 @@ async def test_root_endpoint(client: AsyncClient) -> None:
     response = await client.get("/")
     assert response.status_code == 200
     assert "LoL Stonks RSS" in response.text
-    assert "/feed.xml" in response.text
-    assert "Available endpoints:" in response.text
+    # Root now serves the frontend HTML application
+    assert "<!DOCTYPE html>" in response.text
 
 
 @pytest.mark.asyncio
@@ -90,7 +91,7 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
     Args:
         client: Test client fixture
     """
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     # Setup mock repository with articles
     repo = AsyncMock()
@@ -101,7 +102,7 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
                 title="Test Article",
                 url="https://example.com/article",
                 description="Test description",
-                pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                pub_date=datetime(2024, 1, 1, tzinfo=UTC),
                 source=ArticleSource.LOL_EN_US,
                 categories=["News"],
                 image_url=None,

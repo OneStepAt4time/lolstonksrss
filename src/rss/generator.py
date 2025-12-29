@@ -5,11 +5,12 @@ This module provides the RSSFeedGenerator class which transforms Article objects
 into RSS 2.0 compliant XML feeds using the feedgen library.
 """
 
-from feedgen.feed import FeedGenerator
-from typing import List
-from datetime import datetime, timezone
-from src.models import Article, ArticleSource
 import logging
+from datetime import UTC, datetime
+
+from feedgen.feed import FeedGenerator
+
+from src.models import Article, ArticleSource
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class RSSFeedGenerator:
         feed_title: str = "League of Legends News",
         feed_link: str = "https://www.leagueoflegends.com/news",
         feed_description: str = "Latest news from League of Legends",
-        language: str = "en"
+        language: str = "en",
     ) -> None:
         """
         Initialize RSS feed generator.
@@ -50,11 +51,7 @@ class RSSFeedGenerator:
         self.feed_description = feed_description
         self.language = language
 
-    def generate_feed(
-        self,
-        articles: List[Article],
-        feed_url: str = "https://localhost:8000/feed.xml"
-    ) -> str:
+    def generate_feed(self, articles: list[Article], feed_url: str) -> str:
         """
         Generate RSS 2.0 XML feed from articles.
 
@@ -73,14 +70,14 @@ class RSSFeedGenerator:
         # Feed metadata (required channel elements)
         fg.id(feed_url)
         fg.title(self.feed_title)
-        fg.link(href=self.feed_link, rel='alternate')
-        fg.link(href=feed_url, rel='self')
+        fg.link(href=self.feed_link, rel="alternate")
+        fg.link(href=feed_url, rel="self")
         fg.description(self.feed_description)
         fg.language(self.language)
 
         # Optional channel elements
-        fg.lastBuildDate(datetime.now(timezone.utc))
-        fg.generator('LoL Stonks RSS Generator')
+        fg.lastBuildDate(datetime.now(UTC))
+        fg.generator("LoL Stonks RSS Generator")
 
         # Add articles as feed entries
         for article in articles:
@@ -91,7 +88,7 @@ class RSSFeedGenerator:
 
         logger.info(f"Generated RSS feed with {len(articles)} items")
 
-        return rss_bytes.decode('utf-8')
+        return rss_bytes.decode("utf-8")
 
     def _add_article_entry(self, fg: FeedGenerator, article: Article) -> None:
         """
@@ -126,7 +123,7 @@ class RSSFeedGenerator:
         # Ensure pub_date is timezone-aware
         pub_date = article.pub_date
         if pub_date.tzinfo is None:
-            pub_date = pub_date.replace(tzinfo=timezone.utc)
+            pub_date = pub_date.replace(tzinfo=UTC)
         fe.pubDate(pub_date)
 
         # Optional fields
@@ -135,12 +132,12 @@ class RSSFeedGenerator:
 
         if article.content:
             # Use content:encoded for full HTML content
-            fe.content(article.content, type='html')
+            fe.content(article.content, type="html")
 
         if article.author:
             # RSS 2.0 author format: email (name)
             # Use generic email since we don't have real emails
-            fe.author(name=article.author, email='noreply@riotgames.com')
+            fe.author(name=article.author, email="noreply@riotgames.com")
 
         # Categories
         for category in article.categories:
@@ -156,15 +153,12 @@ class RSSFeedGenerator:
             # Use '0' as placeholder (valid per RSS spec)
             fe.enclosure(
                 url=article.image_url,
-                length='0',
-                type='image/jpeg'  # Assume JPEG, could be enhanced
+                length="0",
+                type="image/jpeg",  # Assume JPEG, could be enhanced
             )
 
     def generate_feed_by_source(
-        self,
-        articles: List[Article],
-        source: ArticleSource,
-        feed_url: str
+        self, articles: list[Article], source: ArticleSource, feed_url: str
     ) -> str:
         """
         Generate RSS feed filtered by source.
@@ -195,10 +189,7 @@ class RSSFeedGenerator:
         return feed_xml
 
     def generate_feed_by_category(
-        self,
-        articles: List[Article],
-        category: str,
-        feed_url: str
+        self, articles: list[Article], category: str, feed_url: str
     ) -> str:
         """
         Generate RSS feed filtered by category.

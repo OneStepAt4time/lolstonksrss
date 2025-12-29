@@ -1,16 +1,19 @@
 """
 Pytest configuration and shared fixtures for the test suite.
 """
-import pytest
 import asyncio
-import sys
 import os
+import sys
+from collections.abc import AsyncGenerator
+
+import pytest
+from httpx import ASGITransport, AsyncClient
 
 # Add src directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Configure pytest-asyncio
-pytest_plugins = ('pytest_asyncio',)
+pytest_plugins = ("pytest_asyncio",)
 
 
 @pytest.fixture(scope="session")
@@ -31,6 +34,21 @@ def base_url():
 def api_timeout():
     """Timeout for API requests in seconds."""
     return int(os.getenv("TEST_API_TIMEOUT", "30"))
+
+
+@pytest.fixture
+async def client() -> AsyncGenerator[AsyncClient, None]:
+    """
+    Create test client for FastAPI app.
+
+    Yields:
+        AsyncClient instance for testing
+    """
+    from src.api.app import app
+
+    transport = ASGITransport(app=app)  # type: ignore[arg-type]
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
 
 def pytest_configure(config):

@@ -5,10 +5,10 @@ This module uses pydantic-settings for type-safe configuration management
 with support for environment variables and .env files.
 """
 
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from functools import lru_cache
-from typing import List, Union
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -24,11 +24,11 @@ class Settings(BaseSettings):
 
     # API configuration
     lol_news_base_url: str = "https://www.leagueoflegends.com"
-    supported_locales: Union[List[str], str] = ["en-us", "it-it"]
+    supported_locales: list[str] | str = ["en-us", "it-it"]
 
     @field_validator("supported_locales", mode="before")
     @classmethod
-    def parse_supported_locales(cls, v: Union[List[str], str]) -> List[str]:
+    def parse_supported_locales(cls, v: list[str] | str) -> list[str]:
         """Parse supported_locales from env string or list."""
         if isinstance(v, list):
             return v
@@ -68,14 +68,32 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
+    # CORS Configuration
+    allowed_origins: list[str] | str = ["http://localhost:8000"]
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v: list[str] | str) -> list[str]:
+        """Parse allowed_origins from env string or list."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            # Split by comma and strip whitespace
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return ["http://localhost:8000"]
+
+    # HTTP Client Configuration
+    http_timeout_seconds: int = 30
+
     class Config:
         """Pydantic configuration."""
+
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance.
