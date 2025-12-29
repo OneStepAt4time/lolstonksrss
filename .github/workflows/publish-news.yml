@@ -63,23 +63,20 @@ jobs:
           path: |
             ~/.cache/uv
             .venv
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', 'requirements.txt') }}
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-uv-
 
       - name: Install dependencies with UV
         run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install -r requirements.txt
+          uv sync
 
       - name: Create data directory
         run: mkdir -p data
 
       - name: Initialize database (if needed)
         run: |
-          source .venv/bin/activate
-          python -c "
+          uv run python -c "
           import asyncio
           from src.database import ArticleRepository
           from src.config import get_settings
@@ -96,8 +93,7 @@ jobs:
 
       - name: Fetch latest news from LoL API
         run: |
-          source .venv/bin/activate
-          python -c "
+          uv run python -c "
           import asyncio
           from src.database import ArticleRepository
           from src.services.update_service import UpdateService
@@ -123,9 +119,8 @@ jobs:
 
       - name: Generate news HTML page
         run: |
-          source .venv/bin/activate
           ARTICLE_LIMIT="${{ github.event.inputs.article_limit || '100' }}"
-          python scripts/generate_news_page.py --output news.html --limit "$ARTICLE_LIMIT"
+          uv run python scripts/generate_news_page.py --output news.html --limit "$ARTICLE_LIMIT"
         timeout-minutes: 2
 
       - name: Create GitHub Pages directory structure

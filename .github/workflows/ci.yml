@@ -31,24 +31,26 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-asyncio
+        uv sync
 
     - name: Run linting
       run: |
-        pip install ruff
-        ruff check src/ tests/
+        uv run ruff check src/ tests/
 
     - name: Run unit tests
       run: |
-        pytest tests/unit/ -v --cov=src --cov-report=xml --cov-report=term
+        uv run pytest tests/unit/ -v --cov=src --cov-report=xml --cov-report=term
 
     - name: Run integration tests
       run: |
-        pytest tests/integration/ -v
+        uv run pytest tests/integration/ -v
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

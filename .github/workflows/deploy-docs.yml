@@ -44,7 +44,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e ".[docs]"
+          uv sync --extra docs
 
       - name: Configure Git for MkDocs
         run: |
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          mkdocs build --strict --verbose
+          uv run mkdocs build --strict --verbose
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -92,11 +92,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e ".[docs]"
+          uv sync --extra docs
 
       - name: Check for broken links
         run: |
-          mkdocs build --strict
+          uv run mkdocs build --strict
 
       - name: Validate HTML
         run: |
