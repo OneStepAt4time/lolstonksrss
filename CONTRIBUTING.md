@@ -218,21 +218,66 @@ See [Testing Requirements](#testing-requirements) for details.
 # Stage changes
 git add .
 
-# Commit with descriptive message
-git commit -m "feat: add RSS item limit configuration"
+# Commit with descriptive message following Conventional Commits
+git commit -m "feat(rss): add RSS item limit configuration"
 ```
 
-Commit message format:
+**Conventional Commits Format**:
 ```
-type: brief description
+<type>(<scope>): <subject>
 
-Detailed explanation (optional)
+<body>
 
-- Additional context
-- Related issues: #123
+<footer>
 ```
 
-Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`
+**Commit Types**:
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `style` - Code style changes (formatting, etc)
+- `refactor` - Code refactoring
+- `perf` - Performance improvements
+- `test` - Test additions or corrections
+- `build` - Build system or dependency changes
+- `ci` - CI/CD configuration changes
+- `chore` - Other changes (maintenance)
+- `revert` - Revert a previous commit
+
+**Scopes** (optional):
+- `api`, `rss`, `database`, `config`, `docker`, `ci`, `docs`, `tests`, `deployment`
+
+**Subject Rules**:
+- Use imperative, present tense: "add" not "added" nor "adds"
+- Don't capitalize first letter
+- No period (.) at the end
+- Maximum 72 characters
+
+**Examples**:
+```bash
+# Feature with scope
+git commit -m "feat(rss): add configurable item limit
+
+- Add max_items parameter to RSSGenerator
+- Update configuration to support item limit
+- Add validation for limit range (1-100)
+
+Closes #123"
+
+# Bug fix
+git commit -m "fix(api): resolve database connection leak"
+
+# Documentation
+git commit -m "docs: update deployment guide for Windows Server"
+
+# Breaking change
+git commit -m "feat(api): redesign RSS endpoint structure
+
+BREAKING CHANGE: RSS endpoint moved from /feed to /api/v2/feed
+Migration guide in docs/migration/v2.md"
+```
+
+**Validation**: Commit messages are automatically validated by the `commit-msg` hook.
 
 #### 6. Submit Pull Request
 

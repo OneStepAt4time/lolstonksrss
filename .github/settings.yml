@@ -1,0 +1,285 @@
+# Repository settings for LoL Stonks RSS
+# This file can be used with Probot Settings app or as documentation for manual configuration
+# See: https://github.com/probot/settings
+
+repository:
+  # Repository name
+  name: lolstonksrss
+
+  # Repository description
+  description: Production-ready RSS feed generator for League of Legends news with Docker support
+
+  # Repository homepage
+  homepage: https://github.com/yourusername/lolstonksrss
+
+  # Repository topics
+  topics: rss, league-of-legends, news-feed, fastapi, docker, python, riot-games
+
+  # Visibility: public or private
+  private: false
+
+  # Enable/disable features
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  has_downloads: true
+
+  # Default branch
+  default_branch: main
+
+  # Allow squash merging
+  allow_squash_merge: true
+
+  # Allow merge commits
+  allow_merge_commit: false
+
+  # Allow rebase merging
+  allow_rebase_merge: true
+
+  # Allow auto-merge
+  allow_auto_merge: true
+
+  # Automatically delete head branches after merge
+  delete_branch_on_merge: true
+
+  # Enable vulnerability alerts
+  enable_vulnerability_alerts: true
+
+  # Enable automated security fixes
+  enable_automated_security_fixes: true
+
+# Branch protection rules
+branches:
+  # Main branch protection
+  - name: main
+    protection:
+      # Require pull request reviews before merging
+      required_pull_request_reviews:
+        # Number of required approving reviews
+        required_approving_review_count: 1
+        # Dismiss stale reviews when new commits are pushed
+        dismiss_stale_reviews: true
+        # Require review from code owners
+        require_code_owner_reviews: true
+        # Restrict who can dismiss pull request reviews
+        dismissal_restrictions:
+          users: []
+          teams: []
+
+      # Require status checks to pass before merging
+      required_status_checks:
+        # Require branches to be up to date before merging
+        strict: true
+        # Required status checks
+        contexts:
+          - test (3.11)
+          - test (3.12)
+          - docker
+          - build-docs
+
+      # Enforce restrictions for administrators
+      enforce_admins: true
+
+      # Restrict who can push to matching branches
+      restrictions:
+        users: []
+        teams: []
+        apps: []
+
+      # Require linear history
+      required_linear_history: true
+
+      # Allow force pushes
+      allow_force_pushes: false
+
+      # Allow deletions
+      allow_deletions: false
+
+      # Require signed commits
+      required_signatures: false
+
+      # Lock branch (read-only)
+      lock_branch: false
+
+      # Allow fork syncing
+      allow_fork_syncing: true
+
+  # Develop branch protection
+  - name: develop
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: true
+        contexts:
+          - test (3.11)
+          - test (3.12)
+          - docker
+      enforce_admins: false
+      restrictions:
+        users: []
+        teams: []
+        apps: []
+      required_linear_history: false
+      allow_force_pushes: false
+      allow_deletions: false
+
+  # Docs branch protection
+  - name: docs
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 0
+      required_status_checks:
+        strict: false
+        contexts:
+          - build-docs
+      enforce_admins: false
+      allow_force_pushes: false
+      allow_deletions: false
+
+# Labels configuration
+labels:
+  # Type labels
+  - name: "type: feature"
+    color: "0e8a16"
+    description: "New feature or enhancement"
+
+  - name: "type: bug"
+    color: "d73a4a"
+    description: "Something isn't working"
+
+  - name: "type: documentation"
+    color: "0075ca"
+    description: "Documentation improvements"
+
+  - name: "type: refactor"
+    color: "fbca04"
+    description: "Code refactoring"
+
+  - name: "type: performance"
+    color: "1d76db"
+    description: "Performance improvements"
+
+  - name: "type: test"
+    color: "bfd4f2"
+    description: "Testing improvements"
+
+  - name: "type: ci/cd"
+    color: "fef2c0"
+    description: "CI/CD improvements"
+
+  - name: "type: security"
+    color: "ee0701"
+    description: "Security fixes or improvements"
+
+  - name: "type: dependencies"
+    color: "0366d6"
+    description: "Dependency updates"
+
+  # Priority labels
+  - name: "priority: critical"
+    color: "b60205"
+    description: "Critical priority - must be addressed immediately"
+
+  - name: "priority: high"
+    color: "d93f0b"
+    description: "High priority"
+
+  - name: "priority: medium"
+    color: "fbca04"
+    description: "Medium priority"
+
+  - name: "priority: low"
+    color: "0e8a16"
+    description: "Low priority"
+
+  # Status labels
+  - name: "status: in progress"
+    color: "ededed"
+    description: "Work in progress"
+
+  - name: "status: blocked"
+    color: "000000"
+    description: "Blocked by something"
+
+  - name: "status: ready for review"
+    color: "0e8a16"
+    description: "Ready for code review"
+
+  - name: "status: needs changes"
+    color: "d93f0b"
+    description: "Changes requested"
+
+  - name: "status: on hold"
+    color: "fbca04"
+    description: "On hold"
+
+  # Other labels
+  - name: "good first issue"
+    color: "7057ff"
+    description: "Good for newcomers"
+
+  - name: "help wanted"
+    color: "008672"
+    description: "Extra attention is needed"
+
+  - name: "question"
+    color: "d876e3"
+    description: "Further information is requested"
+
+  - name: "wontfix"
+    color: "ffffff"
+    description: "This will not be worked on"
+
+  - name: "duplicate"
+    color: "cfd3d7"
+    description: "This issue or pull request already exists"
+
+  - name: "breaking change"
+    color: "ee0701"
+    description: "Breaking change requiring version bump"
+
+  - name: "needs tests"
+    color: "fef2c0"
+    description: "Needs test coverage"
+
+  - name: "needs documentation"
+    color: "0075ca"
+    description: "Needs documentation"
+
+  # Size labels
+  - name: "size: xs"
+    color: "e7e7e7"
+    description: "Extra small change"
+
+  - name: "size: s"
+    color: "c5def5"
+    description: "Small change"
+
+  - name: "size: m"
+    color: "bfe5bf"
+    description: "Medium change"
+
+  - name: "size: l"
+    color: "ffd3b6"
+    description: "Large change"
+
+  - name: "size: xl"
+    color: "ffaaa5"
+    description: "Extra large change"
+
+# Collaborators
+# collaborators:
+#   - username: collaborator1
+#     permission: push
+#   - username: collaborator2
+#     permission: pull
+
+# Teams (for organizations)
+# teams:
+#   - name: developers
+#     permission: push
+#   - name: maintainers
+#     permission: admin
