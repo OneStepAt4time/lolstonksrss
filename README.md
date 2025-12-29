@@ -242,6 +242,10 @@ HOST=0.0.0.0
 PORT=8000
 RELOAD=false                      # Set to true for development
 
+# Security
+ALLOWED_ORIGINS=http://localhost:8000  # Comma-separated CORS origins
+HTTP_TIMEOUT_SECONDS=30                # Timeout for external requests
+
 # Updates
 UPDATE_INTERVAL_MINUTES=30        # How often to fetch new articles
 
@@ -250,6 +254,56 @@ LOG_LEVEL=INFO                    # DEBUG, INFO, WARNING, ERROR
 ```
 
 See `.env.example` for complete configuration reference.
+
+---
+
+## Security
+
+### Built-in Security Features
+
+- **CORS Protection**: Configurable allowed origins (default: localhost only)
+- **Rate Limiting**: Admin endpoints limited to 5 requests/minute per IP
+- **Input Validation**: Category parameters validated against injection attacks
+- **HTTP Timeouts**: 30-second timeout on external requests prevents hangs
+- **Non-root Docker**: Container runs as non-privileged user (UID 1000)
+- **No Hardcoded Secrets**: All configuration via environment variables
+
+### Production Security Checklist
+
+Before deploying to production:
+
+- [ ] Set `ALLOWED_ORIGINS` to your actual domain(s)
+- [ ] Configure firewall rules to restrict access
+- [ ] Enable HTTPS/TLS with reverse proxy (nginx, Traefik)
+- [ ] Review and adjust rate limiting as needed
+- [ ] Implement backup strategy for database
+- [ ] Set up monitoring and alerting
+- [ ] Review Docker security settings
+- [ ] Configure log rotation
+
+### CORS Configuration
+
+**Development**:
+```env
+ALLOWED_ORIGINS=http://localhost:8000,http://localhost:3000
+```
+
+**Production**:
+```env
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+```
+
+### Rate Limiting
+
+Admin endpoints are rate-limited to prevent abuse:
+- `/admin/refresh`: 5 requests/minute per IP
+- `/admin/scheduler/trigger`: 5 requests/minute per IP
+
+Exceeding the limit returns HTTP 429 (Too Many Requests).
+
+### Reporting Security Issues
+
+If you discover a security vulnerability, please email security@example.com (do not use public issues).
 
 ---
 

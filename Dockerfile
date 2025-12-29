@@ -33,7 +33,6 @@ COPY --from=builder --chown=lolrss:lolrss /app/.venv /app/.venv
 # Copy application code
 COPY --chown=lolrss:lolrss src/ ./src/
 COPY --chown=lolrss:lolrss main.py ./
-COPY --chown=lolrss:lolrss .env.example ./.env
 
 # Switch to non-root user
 USER lolrss
