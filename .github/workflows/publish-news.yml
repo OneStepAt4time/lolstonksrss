@@ -1,0 +1,174 @@
+name: Publish News to GitHub Pages
+
+on:
+  # Run every 5 minutes
+  schedule:
+    - cron: '*/5 * * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      article_limit:
+        description: 'Number of articles to include'
+        required: false
+        default: '100'
+        type: string
+
+  # Run on push to main for testing
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '.github/workflows/publish-news.yml'
+      - 'scripts/generate_news_page.py'
+      - 'templates/news_page.html'
+
+# Ensure only one workflow runs at a time to prevent conflicts
+concurrency:
+  group: publish-news
+  cancel-in-progress: false
+
+# Required permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish-news:
+    name: Fetch News & Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1  # Shallow clone for faster checkout
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'  # Cache pip dependencies
+
+      - name: Install UV package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', 'requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies with UV
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install -r requirements.txt
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Initialize database (if needed)
+        run: |
+          source .venv/bin/activate
+          python -c "
+          import asyncio
+          from src.database import ArticleRepository
+          from src.config import get_settings
+
+          async def init_db():
+              settings = get_settings()
+              repo = ArticleRepository(settings.database_path)
+              await repo.initialize()
+              await repo.close()
+              print('Database initialized')
+
+          asyncio.run(init_db())
+          "
+
+      - name: Fetch latest news from LoL API
+        run: |
+          source .venv/bin/activate
+          python -c "
+          import asyncio
+          from src.database import ArticleRepository
+          from src.services.update_service import UpdateService
+          from src.config import get_settings
+
+          async def update_news():
+              settings = get_settings()
+              repo = ArticleRepository(settings.database_path)
+              await repo.initialize()
+
+              update_service = UpdateService(repo)
+              stats = await update_service.update_all_sources()
+
+              print(f'Update complete: {stats[\"total_new\"]} new articles')
+              print(f'Total fetched: {stats[\"total_fetched\"]}')
+              print(f'Duplicates: {stats[\"total_duplicates\"]}')
+
+              await repo.close()
+
+          asyncio.run(update_news())
+          "
+        timeout-minutes: 5
+
+      - name: Generate news HTML page
+        run: |
+          source .venv/bin/activate
+          ARTICLE_LIMIT="${{ github.event.inputs.article_limit || '100' }}"
+          python scripts/generate_news_page.py --output news.html --limit "$ARTICLE_LIMIT"
+        timeout-minutes: 2
+
+      - name: Create GitHub Pages directory structure
+        run: |
+          mkdir -p _site
+          cp news.html _site/index.html
+
+          # Create a simple redirect page for news.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=index.html"></head><body>Redirecting...</body></html>' > _site/news.html
+
+          # Copy any static assets if they exist
+          if [ -d "static" ]; then
+            cp -r static _site/
+          fi
+
+      - name: Add .nojekyll file
+        run: touch _site/.nojekyll
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Output deployment URL
+        run: |
+          echo "News page deployed to: ${{ steps.deployment.outputs.page_url }}"
+          echo "Direct link: ${{ steps.deployment.outputs.page_url }}index.html"
+
+      - name: Verify deployment
+        run: |
+          sleep 10
+          curl -sSf "${{ steps.deployment.outputs.page_url }}" > /dev/null && echo "Deployment successful!" || echo "Warning: Deployment may still be propagating"
+        continue-on-error: true
+
+      # Cache database for next run (optional - reduces API calls)
+      - name: Cache database
+        uses: actions/cache@v4
+        with:
+          path: data/articles.db
+          key: lol-news-db-${{ github.run_number }}
+          restore-keys: |
+            lol-news-db-

@@ -15,8 +15,12 @@
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen.svg)](docs/COVERAGE_REPORT.md)
 [![Tests](https://img.shields.io/badge/tests-151%20passed-brightgreen.svg)](docs/TESTING_SUMMARY.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Live News](https://img.shields.io/badge/live-news%20page-gold.svg)](https://yourusername.github.io/lolstonksrss/)
+[![News Updates](https://img.shields.io/github/actions/workflow/status/yourusername/lolstonksrss/publish-news.yml?label=news%20updates)](https://github.com/yourusername/lolstonksrss/actions/workflows/publish-news.yml)
 
 > A production-ready, containerized RSS feed generator for League of Legends news. Automatically fetches official LoL news and generates RSS 2.0 compliant feeds with multi-language support. Designed for Windows Server deployment with Docker.
+
+**[View Live News Page](https://yourusername.github.io/lolstonksrss/)** - Automatically updated every 5 minutes
 
 ---
 
@@ -27,10 +31,11 @@
 ### Key Features
 
 - **Automatic News Fetching** - Fetches latest LoL news from official Riot Games API
+- **Live News Page** - [Beautiful HTML news page](https://yourusername.github.io/lolstonksrss/) updated every 5 minutes via GitHub Actions
 - **RSS 2.0 Compliant** - Generates standards-compliant RSS feeds compatible with all readers
 - **Multi-Language Support** - EN-US and IT-IT locales with more coming soon
 - **Smart Caching** - Intelligent caching strategy with configurable TTL for optimal performance
-- **Periodic Updates** - Automatic background updates every 30 minutes (configurable)
+- **Periodic Updates** - Automatic background updates every 5 minutes (configurable)
 - **Docker Deployment** - Fully containerized with multi-stage builds and health checks
 - **Windows Server Ready** - Optimized for Windows Server with PowerShell automation scripts
 - **High Test Coverage** - 92% test coverage with 151 passing tests (unit, integration, E2E, performance)
@@ -79,6 +84,7 @@ Your RSS feed will be available at:
 - **EN-US Feed**: http://localhost:8000/feeds/en-us.xml
 - **IT-IT Feed**: http://localhost:8000/feeds/it-it.xml
 - **API Docs**: http://localhost:8000/docs
+- **Live News Page**: [https://yourusername.github.io/lolstonksrss/](https://yourusername.github.io/lolstonksrss/) (auto-updated every 5 min)
 
 ### Docker Compose (Cross-Platform)
 
@@ -127,11 +133,25 @@ python main.py
 
 ## Available Feeds
 
+### RSS Feeds
+
 | Feed URL | Description | Language | Articles |
 |----------|-------------|----------|----------|
 | `/feed.xml` | All articles (all locales) | Mixed | ~150 |
 | `/feeds/en-us.xml` | English news only | EN-US | ~75 |
 | `/feeds/it-it.xml` | Italian news only | IT-IT | ~75 |
+
+### Live News Page
+
+**[Live News Page](https://yourusername.github.io/lolstonksrss/)** - Beautiful, responsive HTML page with:
+- Latest 100 articles from all sources
+- LoL-themed design with dark/light mode
+- Real-time filtering by source, category, or search
+- Auto-refresh every 5 minutes
+- Mobile-friendly responsive layout
+- Updated automatically via GitHub Actions every 5 minutes
+
+[Learn more about the news page automation](docs/GITHUB_PAGES_NEWS.md)
 
 ### API Endpoints
 
@@ -247,7 +267,7 @@ ALLOWED_ORIGINS=http://localhost:8000  # Comma-separated CORS origins
 HTTP_TIMEOUT_SECONDS=30                # Timeout for external requests
 
 # Updates
-UPDATE_INTERVAL_MINUTES=30        # How often to fetch new articles
+UPDATE_INTERVAL_MINUTES=5        # How often to fetch new articles
 
 # Logging
 LOG_LEVEL=INFO                    # DEBUG, INFO, WARNING, ERROR
@@ -383,10 +403,13 @@ Open browser to: http://localhost:8000/docs
 ### Quick References
 - [Quick Start Guide](QUICKSTART.md) - Development setup and first steps
 - [Deployment Quick Start](DEPLOYMENT_QUICKSTART.md) - Fast production deployment
+- [GitHub Pages Quick Start](GITHUB_PAGES_QUICKSTART.md) - Live news page in 5 minutes
 - [Project Summary](PROJECT_SUMMARY.md) - Complete project overview
 
 ### Comprehensive Guides
 - [Windows Deployment Guide](docs/WINDOWS_DEPLOYMENT.md) - Complete Windows Server deployment
+- [GitHub Pages Setup](docs/SETUP_GITHUB_PAGES.md) - Step-by-step GitHub Pages configuration
+- [GitHub Pages Documentation](docs/GITHUB_PAGES_NEWS.md) - Complete automation documentation
 - [Docker Reference](docs/DOCKER.md) - Docker configuration and commands
 - [Production Checklist](docs/PRODUCTION_CHECKLIST.md) - Pre-deployment verification
 - [Testing Guide](docs/TESTING_GUIDE.md) - Testing strategy and execution
@@ -486,7 +509,7 @@ Open browser to: http://localhost:8000/docs
 
 ### Component Responsibilities
 
-- **APScheduler**: Triggers periodic updates (default: 30 minutes)
+- **APScheduler**: Triggers periodic updates (default: 5 minutes)
 - **Update Service**: Orchestrates news fetching and storage
 - **API Client**: Fetches news from Riot Games official endpoints
 - **Repository**: Manages article persistence (SQLite with async)
@@ -496,7 +519,7 @@ Open browser to: http://localhost:8000/docs
 
 ### Data Flow
 
-1. **Scheduled Update** - APScheduler triggers update every 30 minutes
+1. **Scheduled Update** - APScheduler triggers update every 5 minutes
 2. **API Fetch** - API Client fetches latest news from Riot Games
 3. **Database Storage** - Articles saved to SQLite (upsert, no duplicates)
 4. **RSS Generation** - Feed Service creates RSS XML from database
@@ -679,7 +702,7 @@ docker run -d \
   --name lolstonksrss \
   -p 8000:8000 \
   -v $(pwd)/data:/app/data \
-  -e UPDATE_INTERVAL_MINUTES=30 \
+  -e UPDATE_INTERVAL_MINUTES=5 \
   --restart unless-stopped \
   lolstonksrss:latest
 

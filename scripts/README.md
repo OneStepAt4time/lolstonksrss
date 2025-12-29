@@ -1,8 +1,98 @@
-# PowerShell Scripts for LoL Stonks RSS
+# Scripts for LoL Stonks RSS
 
-This directory contains PowerShell scripts to help manage the LoL Stonks RSS application on Windows Server.
+This directory contains automation scripts to help manage and deploy the LoL Stonks RSS application.
 
 ## Available Scripts
+
+### Python Scripts
+
+#### test_news_workflow.py
+
+Test script for GitHub Pages news publishing workflow. Simulates all workflow steps locally to verify everything works before deploying to GitHub Actions.
+
+**Usage:**
+```bash
+python scripts/test_news_workflow.py
+python scripts/test_news_workflow.py --limit 50
+```
+
+**Parameters:**
+- `--limit, -l`: Number of articles to include (default: 100)
+
+**Examples:**
+```bash
+# Test with default settings (100 articles)
+python scripts/test_news_workflow.py
+
+# Test with 50 articles
+python scripts/test_news_workflow.py --limit 50
+
+# Test with maximum articles
+python scripts/test_news_workflow.py --limit 500
+```
+
+**What it tests:**
+1. Database initialization
+2. News fetching from LoL API
+3. HTML page generation
+4. GitHub Pages directory structure creation
+5. File output verification
+
+**Output:**
+- Detailed progress reporting
+- Success/failure indicators
+- File size information
+- Next steps guidance
+- Troubleshooting hints
+
+**Use this before:**
+- Pushing workflow to GitHub
+- Testing template changes
+- Debugging workflow issues
+- Verifying local setup
+
+---
+
+#### generate_news_page.py
+
+Generate HTML news page from database articles. Used by the GitHub Actions workflow and can be run standalone.
+
+**Usage:**
+```bash
+python scripts/generate_news_page.py
+python scripts/generate_news_page.py --output custom.html --limit 100
+```
+
+**Parameters:**
+- `--output, -o`: Output HTML file path (default: news.html)
+- `--limit, -l`: Maximum number of articles (default: 50, max: 500)
+
+**Examples:**
+```bash
+# Generate with defaults
+python scripts/generate_news_page.py
+
+# Custom output location
+python scripts/generate_news_page.py --output public/index.html
+
+# More articles
+python scripts/generate_news_page.py --limit 100
+
+# Combine options
+python scripts/generate_news_page.py --output docs/news.html --limit 200
+```
+
+**Features:**
+- Beautiful LoL-themed HTML
+- Responsive design (mobile-friendly)
+- Dark/light mode toggle
+- Real-time filtering and search
+- Auto-refresh every 5 minutes
+- Category and source badges
+
+---
+
+### PowerShell Scripts
 
 ### 1. windows-deploy.ps1
 
