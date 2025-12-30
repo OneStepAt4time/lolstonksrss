@@ -85,9 +85,58 @@ site/
 *SUMMARY*.md
 *REPORT*.md
 
-# MCP Server Configuration (contains API keys - DO NOT COMMIT)
+# ============================================================================
+# SECURITY: Files that may contain secrets/API keys - NEVER COMMIT
+# ============================================================================
+
+# MCP Server Configuration
 .mcp.json
 glm_settings.json
 
-# Claude Code local settings (may contain tokens)
+# Claude Code local settings
 .claude/settings.local.json
+.claude/settings.json
+
+# Claude work notes (internal documentation, not for repo)
+claude_work/
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API Keys and Secrets
+*secret*
+*secrets.json
+*credentials.json
+*api-keys*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Auth tokens
+*token*
+*auth.json
+
+# AWS credentials
+.aws/credentials
+.aws/config
+
+# Google Cloud credentials
+*gcloud*.json
+*service-account*.json
+
+# Other cloud providers
+.azure/
+.config/gcloud/
+
+# SSH keys (if accidentally placed in project)
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.pub
