@@ -127,7 +127,7 @@ async def test_scheduler_auto_update():
         # Wait for at least 1 update (2 second wait for 0.6 second interval)
         await asyncio.sleep(3)
 
-        status = scheduler.get_status()
+        _status = scheduler.get_status()
 
         # Check if update occurred
         final_count = scheduler.update_service.update_count
@@ -266,7 +266,7 @@ async def test_scheduler_persistence():
         # Start and trigger update
         scheduler.start()
         await scheduler.trigger_update_now()
-        update_count_1 = scheduler.update_service.update_count
+        _update_count_1 = scheduler.update_service.update_count
 
         # Stop before restart
         scheduler.stop()
@@ -369,9 +369,9 @@ async def test_update_timing():
     try:
         service = UpdateService(repo)
 
-        start_time = datetime.utcnow()
+        _start_time = datetime.utcnow()
         stats = await service.update_all_sources()
-        end_time = datetime.utcnow()
+        _end_time = datetime.utcnow()
 
         # Check timing is recorded
         assert "started_at" in stats
@@ -402,7 +402,7 @@ async def test_scheduler_with_database(tmp_path):
         scheduler = NewsScheduler(repo, interval_minutes=1)
 
         # Trigger update
-        stats = await scheduler.trigger_update_now()
+        _stats = await scheduler.trigger_update_now()
 
         # Verify database persistence
         count = await repo.count()

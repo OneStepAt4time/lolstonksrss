@@ -182,7 +182,7 @@ async def test_scheduler_state_size():
         scheduler = NewsScheduler(repo, interval_minutes=1)
 
         # Get initial state
-        status1 = scheduler.get_status()
+        _status1 = scheduler.get_status()
 
         # Trigger update to populate state
         await scheduler.trigger_update_now()

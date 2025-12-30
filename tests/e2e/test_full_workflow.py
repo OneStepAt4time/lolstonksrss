@@ -20,18 +20,18 @@ async def test_complete_workflow_memory_database(tmp_path):
     try:
         articles = [
             Article(
-                title=f"Test Article {i}",
-                url=f"https://example.com/article-{i}",
+                title=f"Test Article {_i}",
+                url=f"https://example.com/article-{_i}",
                 pub_date=datetime.utcnow(),
-                guid=f"test-guid-{i}",
+                guid=f"test-guid-{_i}",
                 source=ArticleSource.LOL_EN_US,
-                description=f"Test description {i}",
-                content=f"<p>Test content {i}</p>",
-                image_url=f"https://example.com/image-{i}.jpg",
+                description=f"Test description {_i}",
+                content=f"<p>Test content {_i}</p>",
+                image_url=f"https://example.com/image-{_i}.jpg",
                 author="Test Author",
                 categories=["News", "Test"]
             )
-            for i in range(10)
+            for _i in range(10)
         ]
         saved_count = await repo.save_many(articles)
         assert saved_count == 10
@@ -41,7 +41,7 @@ async def test_complete_workflow_memory_database(tmp_path):
         assert feed.version == 'rss20'
         assert len(feed.entries) == 10
         assert feed.feed.title
-        for i, entry in enumerate(feed.entries):
+        for _i, entry in enumerate(feed.entries):
             assert entry.title
             assert entry.link
             assert entry.id

@@ -7,7 +7,6 @@ news articles. It handles schema creation, CRUD operations, and indexing.
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import aiosqlite
 
@@ -113,7 +112,7 @@ class ArticleRepository:
                 count += 1
         return count
 
-    async def get_latest(self, limit: int = 50, source: Optional[str] = None) -> list[Article]:
+    async def get_latest(self, limit: int = 50, source: str | None = None) -> list[Article]:
         """
         Get latest articles, optionally filtered by source.
 
@@ -144,7 +143,7 @@ class ArticleRepository:
             rows = await cursor.fetchall()
             return [Article.from_dict(dict(row)) for row in rows]
 
-    async def get_by_guid(self, guid: str) -> Optional[Article]:
+    async def get_by_guid(self, guid: str) -> Article | None:
         """
         Get article by its unique GUID.
 

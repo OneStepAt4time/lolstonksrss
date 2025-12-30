@@ -1,14 +1,11 @@
 """Complete End-to-End Test Suite for LoL Stonks RSS"""
 
-import sys
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import feedparser
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.api_client import LoLNewsAPIClient
 from src.database import ArticleRepository
@@ -160,10 +157,10 @@ async def test_multi_locale_workflow():
 async def test_multi_source_feed_generation(populated_db):
     feed_service = FeedService(populated_db, cache_ttl=300)
     main_feed = feedparser.parse(await feed_service.get_main_feed("http://test/feed.xml"))
-    en_feed = feedparser.parse(await feed_service.get_feed_by_source(
+    _en_feed = feedparser.parse(await feed_service.get_feed_by_source(
         ArticleSource.LOL_EN_US, "http://test/feed/en-us.xml"
     ))
-    it_feed = feedparser.parse(await feed_service.get_feed_by_source(
+    _it_feed = feedparser.parse(await feed_service.get_feed_by_source(
         ArticleSource.LOL_IT_IT, "http://test/feed/it-it.xml"
     ))
     assert len(main_feed.entries) > 0
@@ -186,7 +183,7 @@ async def test_scheduler_manual_trigger(temp_db):
 @pytest.mark.asyncio
 async def test_cache_invalidation_workflow(populated_db):
     feed_service = FeedService(populated_db, cache_ttl=300)
-    feed1 = await feed_service.get_main_feed("http://test/feed.xml")
+    _feed1 = await feed_service.get_main_feed("http://test/feed.xml")
     feed_service.invalidate_cache()
     feed2 = await feed_service.get_main_feed("http://test/feed.xml")
     assert feed2 is not None

@@ -72,7 +72,7 @@ async def test_scheduler_initial_update_on_startup():
     """Test that scheduler performs initial update on startup."""
     async with lifespan(app):
         scheduler = app_state["scheduler"]
-        repository = app_state["repository"]
+        _repository = app_state["repository"]
 
         # The lifespan triggers an initial update
         # Wait a moment for it to complete

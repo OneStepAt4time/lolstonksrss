@@ -250,8 +250,7 @@ async def test_feed_encoding():
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         response = await client.get(f"{BASE_URL}/feed.xml")
         assert response.status_code == 200
-        content_type = response.headers.get("content-type", "")
-        has_utf8 = "utf-8" in content_type.lower()
+        _content_type = response.headers.get("content-type", "")
         try:
             response.content.decode("utf-8")
             is_valid_utf8 = True

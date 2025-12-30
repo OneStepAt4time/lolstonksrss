@@ -7,7 +7,7 @@ for API responses and build IDs.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class TTLCache:
         self.default_ttl = default_ttl_seconds
         self._cache: dict[str, tuple[Any, datetime]] = {}
 
-    def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
         """
         Store a value in the cache with TTL.
 
@@ -44,7 +44,7 @@ class TTLCache:
         self._cache[key] = (value, expiry)
         logger.debug(f"Cache set: {key} (TTL: {ttl}s)")
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Retrieve a value from the cache.
 

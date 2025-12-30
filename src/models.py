@@ -8,7 +8,6 @@ including Article and ArticleSource models.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class ArticleSource(str, Enum):
@@ -52,7 +51,7 @@ class Article:
     # Optional fields
     description: str = ""
     content: str = ""
-    image_url: Optional[str] = None
+    image_url: str | None = None
     author: str = "Riot Games"
     categories: list[str] = field(default_factory=list)
 
