@@ -45,7 +45,8 @@ class ArticleRepository:
         sets up indexes for optimal query performance.
         """
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute('''
+            await db.execute(
+                """
                 CREATE TABLE IF NOT EXISTS articles (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     guid TEXT UNIQUE NOT NULL,
@@ -60,12 +61,13 @@ class ArticleRepository:
                     source TEXT NOT NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
-            ''')
+            """
+            )
 
             # Create indexes for better query performance
-            await db.execute('CREATE INDEX IF NOT EXISTS idx_pub_date ON articles(pub_date DESC)')
-            await db.execute('CREATE INDEX IF NOT EXISTS idx_guid ON articles(guid)')
-            await db.execute('CREATE INDEX IF NOT EXISTS idx_source ON articles(source)')
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_pub_date ON articles(pub_date DESC)")
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_guid ON articles(guid)")
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_source ON articles(source)")
 
             await db.commit()
             logger.info(f"Database initialized at {self.db_path}")
@@ -83,12 +85,15 @@ class ArticleRepository:
         try:
             async with aiosqlite.connect(self.db_path) as db:
                 data = article.to_dict()
-                await db.execute('''
+                await db.execute(
+                    """
                     INSERT INTO articles (guid, title, url, pub_date, description,
                                         content, image_url, author, categories, source)
                     VALUES (:guid, :title, :url, :pub_date, :description,
                             :content, :image_url, :author, :categories, :source)
-                ''', data)
+                """,
+                    data,
+                )
                 await db.commit()
                 logger.info(f"Saved article: {article.title}")
                 return True
@@ -127,18 +132,24 @@ class ArticleRepository:
             db.row_factory = aiosqlite.Row
 
             if source:
-                cursor = await db.execute('''
+                cursor = await db.execute(
+                    """
                     SELECT * FROM articles
                     WHERE source = ?
                     ORDER BY pub_date DESC
                     LIMIT ?
-                ''', (source, limit))
+                """,
+                    (source, limit),
+                )
             else:
-                cursor = await db.execute('''
+                cursor = await db.execute(
+                    """
                     SELECT * FROM articles
                     ORDER BY pub_date DESC
                     LIMIT ?
-                ''', (limit,))
+                """,
+                    (limit,),
+                )
 
             rows = await cursor.fetchall()
             return [Article.from_dict(dict(row)) for row in rows]
@@ -155,7 +166,7 @@ class ArticleRepository:
         """
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute('SELECT * FROM articles WHERE guid = ?', (guid,))
+            cursor = await db.execute("SELECT * FROM articles WHERE guid = ?", (guid,))
             row = await cursor.fetchone()
             return Article.from_dict(dict(row)) if row else None
 
@@ -167,9 +178,9 @@ class ArticleRepository:
             Total number of articles stored
         """
         async with aiosqlite.connect(self.db_path) as db:
-            cursor = await db.execute('SELECT COUNT(*) FROM articles')
+            cursor = await db.execute("SELECT COUNT(*) FROM articles")
             row = await cursor.fetchone()
-            return row[0] if row else 0
+            return int(row[0]) if row else 0
 
     async def close(self) -> None:
         """

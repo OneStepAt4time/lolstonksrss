@@ -60,7 +60,7 @@ class LoLNewsAPIClient:
         cached = self.cache.get(cache_key)
         if cached:
             logger.debug(f"Using cached buildId for {locale}: {cached}")
-            return cached
+            return str(cached)
 
         # Fetch HTML page
         async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as client:

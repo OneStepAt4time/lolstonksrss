@@ -14,6 +14,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from src.config import get_settings
 from src.database import ArticleRepository
+from src.integrations.github_dispatcher import GitHubWorkflowDispatcher
 from src.services.update_service import UpdateService
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,37 @@ class NewsScheduler:
         """
         try:
             stats = await self.update_service.update_all_sources()
+
+            # Trigger GitHub Pages update if new articles found
+            if settings.enable_github_pages_sync and stats.get("total_new", 0) > 0:
+                try:
+                    if settings.github_token:
+                        dispatcher = GitHubWorkflowDispatcher(
+                            token=settings.github_token,
+                            repository=settings.github_repository,
+                        )
+                        success = await dispatcher.trigger_workflow(
+                            workflow_file="publish-news.yml",
+                            inputs={
+                                "triggered_by": "windows-app",
+                                "reason": f"new-articles-found-{stats['total_new']}",
+                            },
+                        )
+                        if success:
+                            logger.info(
+                                "GitHub Pages update triggered",
+                                extra={"new_articles": stats["total_new"]},
+                            )
+                    else:
+                        logger.warning("GitHub Pages sync enabled but GITHUB_TOKEN not configured")
+                except Exception as e:
+                    # Don't crash scheduler if GitHub API fails
+                    logger.error(
+                        "Failed to trigger GitHub Pages update",
+                        extra={"error": str(e)},
+                        exc_info=True,
+                    )
+
             return stats
         except Exception as e:
             logger.error(f"Update job failed: {e}")

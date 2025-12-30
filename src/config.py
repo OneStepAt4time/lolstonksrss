@@ -7,7 +7,7 @@ with support for environment variables and .env files.
 
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -84,6 +84,19 @@ class Settings(BaseSettings):
 
     # HTTP Client Configuration
     http_timeout_seconds: int = 30
+
+    # GitHub Pages Integration (Optional)
+    github_token: str | None = Field(
+        default=None, description="GitHub Personal Access Token for triggering workflows"
+    )
+    github_repository: str = Field(
+        default="OneStepAt4time/lolstonksrss",
+        description="GitHub repository in format 'owner/repo'",
+    )
+    enable_github_pages_sync: bool = Field(
+        default=False,
+        description="Enable automatic GitHub Pages update when new articles found",
+    )
 
     class Config:
         """Pydantic configuration."""
