@@ -69,7 +69,7 @@ jobs:
           echo "${{ steps.meta.outputs.tags }}"
           echo ""
           echo "Available image tags:"
-          for tag in ${{ steps.meta.outputs.tags }}; do
+          printf "%s\n" "${{ steps.meta.outputs.tags }}" | while IFS= read -r tag; do
             echo "  - $tag"
           done
           # Add deployment commands here
