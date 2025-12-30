@@ -80,6 +80,9 @@ nul
 # MkDocs
 site/
 
+# Generated HTML output
+news.html
+
 # Temporary documentation
 *COMPLETE*.md
 *SUMMARY*.md
