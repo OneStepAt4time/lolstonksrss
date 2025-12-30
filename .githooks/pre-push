@@ -66,9 +66,14 @@ if ! uv run mypy src/; then
 fi
 print_success "Mypy type checking passed"
 
-# 2. Run full test suite
-print_info "Running full test suite..."
-if ! uv run pytest -v --cov=src --cov-report=term --cov-report=html; then
+# 2. Run test suite (excluding tests that require external server)
+# Note: E2E tests requiring running server (test_http_endpoints, test_rss_compliance, test_scheduler_api)
+# are run in CI/CD with server infrastructure. Pre-push runs unit/integration tests only.
+print_info "Running test suite (unit + integration + offline E2E)..."
+if ! uv run pytest -v --cov=src --cov-report=term --cov-report=html \
+    --ignore=tests/e2e/test_http_endpoints.py \
+    --ignore=tests/e2e/test_rss_compliance.py \
+    --ignore=tests/e2e/test_scheduler_api.py; then
     print_error "Tests failed"
     exit 1
 fi
@@ -76,7 +81,10 @@ print_success "All tests passed"
 
 # 3. Check test coverage
 print_info "Checking test coverage..."
-COVERAGE=$(uv run pytest --cov=src --cov-report=term | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
+COVERAGE=$(uv run pytest --cov=src --cov-report=term \
+    --ignore=tests/e2e/test_http_endpoints.py \
+    --ignore=tests/e2e/test_rss_compliance.py \
+    --ignore=tests/e2e/test_scheduler_api.py | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
 if [ -n "$COVERAGE" ]; then
     COVERAGE_INT=${COVERAGE%.*}
     if [ "$COVERAGE_INT" -lt 90 ]; then
