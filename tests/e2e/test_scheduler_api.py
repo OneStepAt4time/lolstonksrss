@@ -102,10 +102,7 @@ async def test_concurrent_triggers():
     """Test multiple concurrent trigger requests."""
     async with httpx.AsyncClient(timeout=60.0) as client:
         # Send multiple concurrent trigger requests
-        tasks = [
-            client.post(f"{BASE_URL}/admin/scheduler/trigger")
-            for _ in range(3)
-        ]
+        tasks = [client.post(f"{BASE_URL}/admin/scheduler/trigger") for _ in range(3)]
 
         responses = await asyncio.gather(*tasks)
 

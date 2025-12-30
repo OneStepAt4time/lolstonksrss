@@ -49,7 +49,9 @@ def test_scheduler_start(scheduler: NewsScheduler) -> None:
     scheduler.stop()
 
 
-def test_scheduler_start_already_running(scheduler: NewsScheduler, caplog: pytest.LogCaptureFixture) -> None:
+def test_scheduler_start_already_running(
+    scheduler: NewsScheduler, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test starting scheduler when already running."""
     import logging
 
@@ -92,9 +94,7 @@ async def test_manual_trigger(scheduler: NewsScheduler) -> None:
         "elapsed_seconds": 1.5,
     }
 
-    with patch.object(
-        scheduler.update_service, "update_all_sources", return_value=mock_stats
-    ):
+    with patch.object(scheduler.update_service, "update_all_sources", return_value=mock_stats):
         stats = await scheduler.trigger_update_now()
         assert "total_new" in stats
         assert stats["total_new"] == 5
@@ -153,9 +153,7 @@ async def test_update_job_success(scheduler: NewsScheduler) -> None:
         "total_duplicates": 2,
     }
 
-    with patch.object(
-        scheduler.update_service, "update_all_sources", return_value=mock_stats
-    ):
+    with patch.object(scheduler.update_service, "update_all_sources", return_value=mock_stats):
         stats = await scheduler._update_job()
         assert stats["total_new"] == 3
         assert stats["total_fetched"] == 5

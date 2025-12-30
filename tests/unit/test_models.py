@@ -21,7 +21,7 @@ def test_article_creation():
         guid="test-123",
         source=ArticleSource.LOL_EN_US,
         description="Test description",
-        categories=["Game Updates", "Champions"]
+        categories=["Game Updates", "Champions"],
     )
 
     assert article.title == "Test Article"
@@ -38,7 +38,7 @@ def test_article_minimal_creation():
         url="https://example.com/minimal",
         pub_date=datetime(2025, 12, 28),
         guid="minimal-123",
-        source=ArticleSource.LOL_IT_IT
+        source=ArticleSource.LOL_IT_IT,
     )
 
     assert article.title == "Minimal Article"
@@ -56,7 +56,7 @@ def test_article_validation_empty_title():
             url="https://example.com/test",
             pub_date=datetime.now(),
             guid="test-123",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         )
 
 
@@ -68,7 +68,7 @@ def test_article_validation_empty_url():
             url="",
             pub_date=datetime.now(),
             guid="test-123",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         )
 
 
@@ -80,7 +80,7 @@ def test_article_validation_empty_guid():
             url="https://example.com/test",
             pub_date=datetime.now(),
             guid="",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         )
 
 
@@ -94,33 +94,33 @@ def test_article_to_dict():
         source=ArticleSource.LOL_EN_US,
         categories=["Cat1", "Cat2"],
         description="Test description",
-        image_url="https://example.com/image.jpg"
+        image_url="https://example.com/image.jpg",
     )
 
     data = article.to_dict()
-    assert data['title'] == "Test"
-    assert data['url'] == "https://example.com/test"
-    assert data['guid'] == "test-123"
-    assert data['source'] == "lol-en-us"
-    assert data['categories'] == "Cat1,Cat2"
-    assert data['description'] == "Test description"
-    assert data['image_url'] == "https://example.com/image.jpg"
-    assert 'pub_date' in data
-    assert 'created_at' in data
+    assert data["title"] == "Test"
+    assert data["url"] == "https://example.com/test"
+    assert data["guid"] == "test-123"
+    assert data["source"] == "lol-en-us"
+    assert data["categories"] == "Cat1,Cat2"
+    assert data["description"] == "Test description"
+    assert data["image_url"] == "https://example.com/image.jpg"
+    assert "pub_date" in data
+    assert "created_at" in data
 
 
 def test_article_from_dict():
     """Test article deserialization from dictionary."""
     data = {
-        'title': "Test",
-        'url': "https://example.com/test",
-        'pub_date': "2025-12-28T10:00:00",
-        'guid': "test-123",
-        'source': "lol-en-us",
-        'categories': "Cat1,Cat2",
-        'description': "Test description",
-        'author': "Riot Games",
-        'created_at': "2025-12-28T09:00:00"
+        "title": "Test",
+        "url": "https://example.com/test",
+        "pub_date": "2025-12-28T10:00:00",
+        "guid": "test-123",
+        "source": "lol-en-us",
+        "categories": "Cat1,Cat2",
+        "description": "Test description",
+        "author": "Riot Games",
+        "created_at": "2025-12-28T09:00:00",
     }
 
     article = Article.from_dict(data)
@@ -136,12 +136,12 @@ def test_article_from_dict():
 def test_article_from_dict_empty_categories():
     """Test deserialization with empty categories."""
     data = {
-        'title': "Test",
-        'url': "https://example.com/test",
-        'pub_date': "2025-12-28T10:00:00",
-        'guid': "test-123",
-        'source': "lol-en-us",
-        'categories': ""
+        "title": "Test",
+        "url": "https://example.com/test",
+        "pub_date": "2025-12-28T10:00:00",
+        "guid": "test-123",
+        "source": "lol-en-us",
+        "categories": "",
     }
 
     article = Article.from_dict(data)
@@ -157,7 +157,7 @@ def test_article_roundtrip():
         guid="roundtrip-123",
         source=ArticleSource.LOL_IT_IT,
         description="Testing roundtrip",
-        categories=["Test", "Roundtrip"]
+        categories=["Test", "Roundtrip"],
     )
 
     # Serialize then deserialize

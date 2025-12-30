@@ -21,35 +21,37 @@ def mock_repository() -> AsyncMock:
     repo = AsyncMock()
 
     # Default articles for testing
-    repo.get_latest = AsyncMock(return_value=[
-        Article(
-            title="Test Article 1",
-            url="https://example.com/test1",
-            pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
-            guid="test-1",
-            source=ArticleSource.LOL_EN_US,
-            description="First test article",
-            categories=["News", "Champions"]
-        ),
-        Article(
-            title="Test Article 2",
-            url="https://example.com/test2",
-            pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=UTC),
-            guid="test-2",
-            source=ArticleSource.LOL_EN_US,
-            description="Second test article",
-            categories=["Patches"]
-        ),
-        Article(
-            title="Articolo di Test 3",
-            url="https://example.com/test3",
-            pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=UTC),
-            guid="test-3",
-            source=ArticleSource.LOL_IT_IT,
-            description="Terzo articolo di test",
-            categories=["News"]
-        )
-    ])
+    repo.get_latest = AsyncMock(
+        return_value=[
+            Article(
+                title="Test Article 1",
+                url="https://example.com/test1",
+                pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+                guid="test-1",
+                source=ArticleSource.LOL_EN_US,
+                description="First test article",
+                categories=["News", "Champions"],
+            ),
+            Article(
+                title="Test Article 2",
+                url="https://example.com/test2",
+                pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=UTC),
+                guid="test-2",
+                source=ArticleSource.LOL_EN_US,
+                description="Second test article",
+                categories=["Patches"],
+            ),
+            Article(
+                title="Articolo di Test 3",
+                url="https://example.com/test3",
+                pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=UTC),
+                guid="test-3",
+                source=ArticleSource.LOL_IT_IT,
+                description="Terzo articolo di test",
+                categories=["News"],
+            ),
+        ]
+    )
 
     return repo
 
@@ -73,8 +75,8 @@ async def test_get_main_feed(mock_repository: AsyncMock) -> None:
     feed_xml = await service.get_main_feed("http://localhost:8000/feed.xml")
 
     # Should be valid RSS
-    assert '<?xml' in feed_xml
-    assert '<rss' in feed_xml
+    assert "<?xml" in feed_xml
+    assert "<rss" in feed_xml
     assert 'version="2.0"' in feed_xml
 
     # Repository should be called once
@@ -134,19 +136,15 @@ async def test_get_feed_by_source_en(mock_repository: AsyncMock) -> None:
     service = FeedService(mock_repository)
 
     feed_xml = await service.get_feed_by_source(
-        ArticleSource.LOL_EN_US,
-        "http://localhost:8000/feed/en-us.xml"
+        ArticleSource.LOL_EN_US, "http://localhost:8000/feed/en-us.xml"
     )
 
     # Should be valid RSS
-    assert '<?xml' in feed_xml
-    assert '<rss' in feed_xml
+    assert "<?xml" in feed_xml
+    assert "<rss" in feed_xml
 
     # Repository should be called with source filter
-    mock_repository.get_latest.assert_called_once_with(
-        limit=50,
-        source="lol-en-us"
-    )
+    mock_repository.get_latest.assert_called_once_with(limit=50, source="lol-en-us")
 
     # Parse and validate
     feed = feedparser.parse(feed_xml)
@@ -158,23 +156,24 @@ async def test_get_feed_by_source_it(mock_repository: AsyncMock) -> None:
     """Test getting feed filtered by Italian source."""
     # Create mock with only Italian articles
     mock_repo = AsyncMock()
-    mock_repo.get_latest = AsyncMock(return_value=[
-        Article(
-            title="Articolo Italiano",
-            url="https://example.com/it",
-            pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
-            guid="it-1",
-            source=ArticleSource.LOL_IT_IT,
-            description="Descrizione italiana",
-            categories=["Notizie"]
-        )
-    ])
+    mock_repo.get_latest = AsyncMock(
+        return_value=[
+            Article(
+                title="Articolo Italiano",
+                url="https://example.com/it",
+                pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+                guid="it-1",
+                source=ArticleSource.LOL_IT_IT,
+                description="Descrizione italiana",
+                categories=["Notizie"],
+            )
+        ]
+    )
 
     service = FeedService(mock_repo)
 
     feed_xml = await service.get_feed_by_source(
-        ArticleSource.LOL_IT_IT,
-        "http://localhost:8000/feed/it-it.xml"
+        ArticleSource.LOL_IT_IT, "http://localhost:8000/feed/it-it.xml"
     )
 
     # Should use Italian generator
@@ -189,14 +188,12 @@ async def test_get_feed_by_source_caching(mock_repository: AsyncMock) -> None:
 
     # First call
     feed1 = await service.get_feed_by_source(
-        ArticleSource.LOL_EN_US,
-        "http://localhost:8000/feed/en-us.xml"
+        ArticleSource.LOL_EN_US, "http://localhost:8000/feed/en-us.xml"
     )
 
     # Second call (should use cache)
     feed2 = await service.get_feed_by_source(
-        ArticleSource.LOL_EN_US,
-        "http://localhost:8000/feed/en-us.xml"
+        ArticleSource.LOL_EN_US, "http://localhost:8000/feed/en-us.xml"
     )
 
     assert feed1 == feed2
@@ -209,13 +206,12 @@ async def test_get_feed_by_category(mock_repository: AsyncMock) -> None:
     service = FeedService(mock_repository)
 
     feed_xml = await service.get_feed_by_category(
-        "Champions",
-        "http://localhost:8000/feed/champions.xml"
+        "Champions", "http://localhost:8000/feed/champions.xml"
     )
 
     # Should be valid RSS
-    assert '<?xml' in feed_xml
-    assert '<rss' in feed_xml
+    assert "<?xml" in feed_xml
+    assert "<rss" in feed_xml
 
     # Repository should fetch more articles for filtering
     mock_repository.get_latest.assert_called_once_with(limit=100)  # limit * 2
@@ -231,8 +227,7 @@ async def test_get_feed_by_category_filters_correctly(mock_repository: AsyncMock
     service = FeedService(mock_repository)
 
     feed_xml = await service.get_feed_by_category(
-        "Champions",
-        "http://localhost:8000/feed/champions.xml"
+        "Champions", "http://localhost:8000/feed/champions.xml"
     )
 
     feed = feedparser.parse(feed_xml)
@@ -249,16 +244,10 @@ async def test_get_feed_by_category_caching(mock_repository: AsyncMock) -> None:
     service = FeedService(mock_repository, cache_ttl=300)
 
     # First call
-    feed1 = await service.get_feed_by_category(
-        "News",
-        "http://localhost:8000/feed/news.xml"
-    )
+    feed1 = await service.get_feed_by_category("News", "http://localhost:8000/feed/news.xml")
 
     # Second call (should use cache)
-    feed2 = await service.get_feed_by_category(
-        "News",
-        "http://localhost:8000/feed/news.xml"
-    )
+    feed2 = await service.get_feed_by_category("News", "http://localhost:8000/feed/news.xml")
 
     assert feed1 == feed2
     assert mock_repository.get_latest.call_count == 1
@@ -293,8 +282,8 @@ async def test_empty_articles_list(mock_repository: AsyncMock) -> None:
     feed_xml = await service.get_main_feed("http://localhost:8000/feed.xml")
 
     # Should still be valid RSS
-    assert '<?xml' in feed_xml
-    assert '<rss' in feed_xml
+    assert "<?xml" in feed_xml
+    assert "<rss" in feed_xml
 
     feed = feedparser.parse(feed_xml)
     assert len(feed.entries) == 0
@@ -310,7 +299,7 @@ async def test_multiple_categories_per_article(mock_repository: AsyncMock) -> No
 
     # Find article with multiple categories (Test Article 1)
     entry = next(e for e in feed.entries if "Test Article 1" in e.title)
-    tags = [tag['term'] for tag in entry.tags]
+    tags = [tag["term"] for tag in entry.tags]
 
     assert "News" in tags
     assert "Champions" in tags
@@ -332,10 +321,11 @@ async def test_concurrent_requests(mock_repository: AsyncMock) -> None:
 
     # Make multiple concurrent requests
     import asyncio
+
     feeds = await asyncio.gather(
         service.get_main_feed("http://localhost:8000/feed.xml"),
         service.get_main_feed("http://localhost:8000/feed.xml"),
-        service.get_main_feed("http://localhost:8000/feed.xml")
+        service.get_main_feed("http://localhost:8000/feed.xml"),
     )
 
     # All should return the same feed
@@ -361,8 +351,7 @@ async def test_category_feed_with_no_matches(mock_repository: AsyncMock) -> None
 
     # Request feed for category that doesn't exist
     feed_xml = await service.get_feed_by_category(
-        "NonExistentCategory",
-        "http://localhost:8000/feed/nonexistent.xml"
+        "NonExistentCategory", "http://localhost:8000/feed/nonexistent.xml"
     )
 
     feed = feedparser.parse(feed_xml)
@@ -382,8 +371,7 @@ async def test_source_feed_with_no_articles(mock_repository: AsyncMock) -> None:
     service = FeedService(mock_repo)
 
     feed_xml = await service.get_feed_by_source(
-        ArticleSource.LOL_EN_US,
-        "http://localhost:8000/feed/en-us.xml"
+        ArticleSource.LOL_EN_US, "http://localhost:8000/feed/en-us.xml"
     )
 
     feed = feedparser.parse(feed_xml)
@@ -397,7 +385,7 @@ async def test_feed_service_uses_config_settings() -> None:
     mock_repo.get_latest = AsyncMock(return_value=[])
 
     # Mock settings
-    with patch('src.rss.feed_service.settings') as mock_settings:
+    with patch("src.rss.feed_service.settings") as mock_settings:
         mock_settings.feed_title_en = "Custom EN Title"
         mock_settings.feed_title_it = "Custom IT Title"
         mock_settings.feed_description_en = "Custom EN Description"
@@ -422,16 +410,8 @@ async def test_cache_keys_are_unique() -> None:
 
     # Generate different feeds
     await service.get_main_feed("http://localhost/main.xml", limit=50)
-    await service.get_feed_by_source(
-        ArticleSource.LOL_EN_US,
-        "http://localhost/en.xml",
-        limit=50
-    )
-    await service.get_feed_by_category(
-        "News",
-        "http://localhost/news.xml",
-        limit=50
-    )
+    await service.get_feed_by_source(ArticleSource.LOL_EN_US, "http://localhost/en.xml", limit=50)
+    await service.get_feed_by_category("News", "http://localhost/news.xml", limit=50)
 
     # Each should trigger a repository call (different cache keys)
     assert mock_repo.get_latest.call_count == 3

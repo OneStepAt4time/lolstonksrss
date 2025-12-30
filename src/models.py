@@ -80,21 +80,21 @@ class Article:
             Dictionary representation of the article with serialized fields
         """
         return {
-            'title': self.title,
-            'url': self.url,
-            'pub_date': self.pub_date.isoformat(),
-            'guid': self.guid,
-            'source': self.source.value,
-            'description': self.description,
-            'content': self.content,
-            'image_url': self.image_url,
-            'author': self.author,
-            'categories': ','.join(self.categories),  # Store as CSV
-            'created_at': self.created_at.isoformat()
+            "title": self.title,
+            "url": self.url,
+            "pub_date": self.pub_date.isoformat(),
+            "guid": self.guid,
+            "source": self.source.value,
+            "description": self.description,
+            "content": self.content,
+            "image_url": self.image_url,
+            "author": self.author,
+            "categories": ",".join(self.categories),  # Store as CSV
+            "created_at": self.created_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'Article':
+    def from_dict(cls, data: dict) -> "Article":
         """
         Create Article instance from dictionary.
 
@@ -108,15 +108,17 @@ class Article:
             Article instance constructed from the dictionary
         """
         return cls(
-            title=data['title'],
-            url=data['url'],
-            pub_date=datetime.fromisoformat(data['pub_date']),
-            guid=data['guid'],
-            source=ArticleSource(data['source']),
-            description=data.get('description', ''),
-            content=data.get('content', ''),
-            image_url=data.get('image_url'),
-            author=data.get('author', 'Riot Games'),
-            categories=data.get('categories', '').split(',') if data.get('categories') else [],
-            created_at=datetime.fromisoformat(data['created_at']) if data.get('created_at') else datetime.utcnow()
+            title=data["title"],
+            url=data["url"],
+            pub_date=datetime.fromisoformat(data["pub_date"]),
+            guid=data["guid"],
+            source=ArticleSource(data["source"]),
+            description=data.get("description", ""),
+            content=data.get("content", ""),
+            image_url=data.get("image_url"),
+            author=data.get("author", "Riot Games"),
+            categories=data.get("categories", "").split(",") if data.get("categories") else [],
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else datetime.utcnow(),
         )

@@ -29,7 +29,7 @@ async def test_complete_workflow_memory_database(tmp_path):
                 content=f"<p>Test content {_i}</p>",
                 image_url=f"https://example.com/image-{_i}.jpg",
                 author="Test Author",
-                categories=["News", "Test"]
+                categories=["News", "Test"],
             )
             for _i in range(10)
         ]
@@ -38,7 +38,7 @@ async def test_complete_workflow_memory_database(tmp_path):
         feed_service = FeedService(repo, cache_ttl=300)
         feed_xml = await feed_service.get_main_feed("http://test/feed.xml", limit=10)
         feed = feedparser.parse(feed_xml)
-        assert feed.version == 'rss20'
+        assert feed.version == "rss20"
         assert len(feed.entries) == 10
         assert feed.feed.title
         for _i, entry in enumerate(feed.entries):
@@ -47,6 +47,7 @@ async def test_complete_workflow_memory_database(tmp_path):
             assert entry.id
     finally:
         await repo.close()
+
 
 @pytest.mark.slow
 @pytest.mark.e2e
@@ -63,7 +64,7 @@ async def test_multi_source_workflow(tmp_path):
                 guid="en-guid",
                 source=ArticleSource.LOL_EN_US,
                 description="English",
-                categories=["News"]
+                categories=["News"],
             ),
             Article(
                 title="Italian Article",
@@ -72,12 +73,14 @@ async def test_multi_source_workflow(tmp_path):
                 guid="it-guid",
                 source=ArticleSource.LOL_IT_IT,
                 description="Italian",
-                categories=["News"]
-            )
+                categories=["News"],
+            ),
         ]
         await repo.save_many(articles)
         feed_service = FeedService(repo)
-        en_feed = feedparser.parse(await feed_service.get_feed_by_source(ArticleSource.LOL_EN_US, "http://test/feed.xml"))
+        en_feed = feedparser.parse(
+            await feed_service.get_feed_by_source(ArticleSource.LOL_EN_US, "http://test/feed.xml")
+        )
         assert len(en_feed.entries) == 1
         main_feed = feedparser.parse(await feed_service.get_main_feed("http://test/feed.xml"))
         assert len(main_feed.entries) == 2

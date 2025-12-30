@@ -25,7 +25,7 @@ async def test_fetch_real_en_us_news() -> None:
     """
     client = LoLNewsAPIClient()
 
-    articles = await client.fetch_news('en-us')
+    articles = await client.fetch_news("en-us")
 
     # Validate results
     assert len(articles) > 0, "Should fetch at least one article"
@@ -54,7 +54,7 @@ async def test_fetch_real_it_it_news() -> None:
     """
     client = LoLNewsAPIClient()
 
-    articles = await client.fetch_news('it-it')
+    articles = await client.fetch_news("it-it")
 
     # Validate results
     assert len(articles) > 0, "Should fetch at least one article"
@@ -77,11 +77,11 @@ async def test_buildid_caching() -> None:
     client = LoLNewsAPIClient()
 
     # First call - should fetch buildID from HTML
-    build_id_1 = await client.get_build_id('en-us')
+    build_id_1 = await client.get_build_id("en-us")
     assert build_id_1, "BuildID should be extracted"
 
     # Second call - should use cached buildID
-    build_id_2 = await client.get_build_id('en-us')
+    build_id_2 = await client.get_build_id("en-us")
     assert build_id_2 == build_id_1, "BuildID should be cached"
 
     print(f"BuildID: {build_id_1}")
@@ -99,11 +99,11 @@ async def test_multiple_locales() -> None:
     client = LoLNewsAPIClient()
 
     # Fetch English articles
-    en_articles = await client.fetch_news('en-us')
+    en_articles = await client.fetch_news("en-us")
     assert len(en_articles) > 0
 
     # Fetch Italian articles
-    it_articles = await client.fetch_news('it-it')
+    it_articles = await client.fetch_news("it-it")
     assert len(it_articles) > 0
 
     # Verify sources are correct

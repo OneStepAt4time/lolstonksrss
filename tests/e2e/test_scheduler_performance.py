@@ -192,6 +192,7 @@ async def test_scheduler_state_size():
 
         # Measure state size
         import sys
+
         state_size = sys.getsizeof(status2)
 
         print("Scheduler State Size:")

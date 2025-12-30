@@ -23,15 +23,17 @@ def sample_article():
         content="<p>Test content</p>",
         image_url="https://example.com/image.jpg",
         author="Test Author",
-        categories=["News", "Test"]
+        categories=["News", "Test"],
     )
+
 
 @pytest.mark.validation
 def test_rss_20_version_compliance(sample_article):
     generator = RSSFeedGenerator()
     feed_xml = generator.generate_feed([sample_article], "http://test/feed.xml")
     feed = feedparser.parse(feed_xml)
-    assert feed.version == 'rss20'
+    assert feed.version == "rss20"
+
 
 @pytest.mark.validation
 def test_required_channel_elements(sample_article):
@@ -41,6 +43,7 @@ def test_required_channel_elements(sample_article):
     assert feed.feed.title
     assert feed.feed.link
     assert feed.feed.description
+
 
 @pytest.mark.validation
 def test_xml_well_formed(sample_article):

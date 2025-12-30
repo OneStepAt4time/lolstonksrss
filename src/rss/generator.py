@@ -88,7 +88,7 @@ class RSSFeedGenerator:
 
         logger.info(f"Generated RSS feed with {len(articles)} items")
 
-        return rss_bytes.decode("utf-8")
+        return str(rss_bytes.decode("utf-8"))
 
     def _add_article_entry(self, fg: FeedGenerator, article: Article) -> None:
         """

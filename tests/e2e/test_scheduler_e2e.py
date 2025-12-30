@@ -182,8 +182,9 @@ async def test_scheduler_error_handling():
         scheduler = NewsScheduler(repo, interval_minutes=1)
 
         # Mock update_service to raise error
-        with patch.object(scheduler.update_service, "update_all_sources",
-                          side_effect=Exception("Test error")):
+        with patch.object(
+            scheduler.update_service, "update_all_sources", side_effect=Exception("Test error")
+        ):
             stats = await scheduler.trigger_update_now()
             assert "error" in stats
     finally:
@@ -251,7 +252,6 @@ async def test_concurrent_updates():
         await repo.close()
 
 
-
 @pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.asyncio
@@ -282,6 +282,7 @@ async def test_scheduler_persistence():
         scheduler2.stop()
     finally:
         await repo.close()
+
 
 @pytest.mark.e2e
 @pytest.mark.slow

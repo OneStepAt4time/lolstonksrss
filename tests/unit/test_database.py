@@ -46,7 +46,7 @@ async def test_save_article(temp_db):
         pub_date=datetime(2025, 12, 28, 10, 0, 0),
         guid="test-123",
         source=ArticleSource.LOL_EN_US,
-        description="Test description"
+        description="Test description",
     )
 
     result = await temp_db.save(article)
@@ -65,7 +65,7 @@ async def test_save_duplicate_article(temp_db):
         url="https://example.com/test",
         pub_date=datetime(2025, 12, 28),
         guid="test-123",
-        source=ArticleSource.LOL_EN_US
+        source=ArticleSource.LOL_EN_US,
     )
 
     # Save first time
@@ -90,7 +90,7 @@ async def test_save_many_articles(temp_db):
             url=f"https://example.com/article-{i}",
             pub_date=datetime(2025, 12, 28, 10, i, 0),
             guid=f"test-{i}",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         )
         for i in range(5)
     ]
@@ -111,14 +111,14 @@ async def test_save_many_with_duplicates(temp_db):
             url="https://example.com/1",
             pub_date=datetime(2025, 12, 28),
             guid="test-1",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         ),
         Article(
             title="Article 2",
             url="https://example.com/2",
             pub_date=datetime(2025, 12, 28),
             guid="test-2",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         ),
     ]
 
@@ -133,7 +133,7 @@ async def test_save_many_with_duplicates(temp_db):
             url="https://example.com/3",
             pub_date=datetime(2025, 12, 28),
             guid="test-3",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         )
     )
 
@@ -153,7 +153,7 @@ async def test_get_by_guid(temp_db):
         pub_date=datetime(2025, 12, 28),
         guid="test-123",
         source=ArticleSource.LOL_EN_US,
-        description="Test description"
+        description="Test description",
     )
 
     await temp_db.save(article)
@@ -183,7 +183,7 @@ async def test_get_latest(temp_db):
             url=f"https://example.com/article-{i}",
             pub_date=datetime(2025, 12, 20 + i),  # Different dates
             guid=f"test-{i}",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         )
         for i in range(5)
     ]
@@ -209,21 +209,21 @@ async def test_get_latest_with_source_filter(temp_db):
             url="https://example.com/en-1",
             pub_date=datetime(2025, 12, 25),
             guid="en-1",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         ),
         Article(
             title="IT Article 1",
             url="https://example.com/it-1",
             pub_date=datetime(2025, 12, 26),
             guid="it-1",
-            source=ArticleSource.LOL_IT_IT
+            source=ArticleSource.LOL_IT_IT,
         ),
         Article(
             title="EN Article 2",
             url="https://example.com/en-2",
             pub_date=datetime(2025, 12, 27),
             guid="en-2",
-            source=ArticleSource.LOL_EN_US
+            source=ArticleSource.LOL_EN_US,
         ),
     ]
 

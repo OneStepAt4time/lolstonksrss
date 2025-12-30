@@ -15,14 +15,16 @@ class EndpointMetrics:
         self.results = []
 
     def add_result(self, endpoint, method, status_code, response_time, success, details=""):
-        self.results.append({
-            "endpoint": endpoint,
-            "method": method,
-            "status_code": status_code,
-            "response_time_ms": round(response_time * 1000, 2),
-            "success": success,
-            "details": details
-        })
+        self.results.append(
+            {
+                "endpoint": endpoint,
+                "method": method,
+                "status_code": status_code,
+                "response_time_ms": round(response_time * 1000, 2),
+                "success": success,
+                "details": details,
+            }
+        )
 
     def get_summary(self):
         total = len(self.results)
@@ -31,8 +33,9 @@ class EndpointMetrics:
             "total_tests": total,
             "passed": passed,
             "failed": total - passed,
-            "success_rate": f"{(passed / total * 100):.1f}%" if total > 0 else "N/A"
+            "success_rate": f"{(passed / total * 100):.1f}%" if total > 0 else "N/A",
         }
+
 
 metrics = EndpointMetrics()
 
@@ -74,15 +77,16 @@ def validate_rss_feed(xml_content, expected_version="rss20"):
             "entry_count": len(feed.entries),
             "errors": validation_errors,
             "warnings": warnings,
-            "feed": feed
+            "feed": feed,
         }
     except Exception as e:
         return {
             "valid": False,
             "errors": [f"Feed parsing failed: {str(e)}"],
             "warnings": [],
-            "feed": None
+            "feed": None,
         }
+
 
 @pytest.mark.e2e
 @pytest.mark.smoke
@@ -95,6 +99,7 @@ async def test_root_endpoint():
         metrics.add_result("/", "GET", response.status_code, elapsed, response.status_code == 200)
         assert response.status_code == 200
 
+
 @pytest.mark.e2e
 @pytest.mark.smoke
 @pytest.mark.asyncio
@@ -105,8 +110,11 @@ async def test_health_check():
         elapsed = time.time() - start
         assert response.status_code == 200
         data = response.json()
-        metrics.add_result("/health", "GET", response.status_code, elapsed, data.get("status") == "healthy")
+        metrics.add_result(
+            "/health", "GET", response.status_code, elapsed, data.get("status") == "healthy"
+        )
         assert data["status"] == "healthy"
+
 
 @pytest.mark.e2e
 @pytest.mark.smoke
@@ -125,6 +133,7 @@ async def test_main_feed():
         assert validation["feed_version"] == "rss20"
         assert validation["entry_count"] > 0
 
+
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_english_source_feed():
@@ -134,8 +143,11 @@ async def test_english_source_feed():
         elapsed = time.time() - start
         assert response.status_code == 200
         validation = validate_rss_feed(response.text)
-        metrics.add_result("/feed/en-us.xml", "GET", response.status_code, elapsed, validation["valid"])
+        metrics.add_result(
+            "/feed/en-us.xml", "GET", response.status_code, elapsed, validation["valid"]
+        )
         assert validation["valid"]
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -146,8 +158,11 @@ async def test_italian_source_feed():
         elapsed = time.time() - start
         assert response.status_code == 200
         validation = validate_rss_feed(response.text)
-        metrics.add_result("/feed/it-it.xml", "GET", response.status_code, elapsed, validation["valid"])
+        metrics.add_result(
+            "/feed/it-it.xml", "GET", response.status_code, elapsed, validation["valid"]
+        )
         assert validation["valid"]
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -156,8 +171,11 @@ async def test_invalid_source_feed():
         start = time.time()
         response = await client.get(f"{BASE_URL}/feed/invalid.xml")
         elapsed = time.time() - start
-        metrics.add_result("/feed/invalid.xml", "GET", response.status_code, elapsed, response.status_code == 404)
+        metrics.add_result(
+            "/feed/invalid.xml", "GET", response.status_code, elapsed, response.status_code == 404
+        )
         assert response.status_code == 404
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -171,6 +189,7 @@ async def test_api_articles():
         assert isinstance(articles, list)
         metrics.add_result("/api/articles", "GET", response.status_code, elapsed, True)
 
+
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_admin_refresh():
@@ -180,8 +199,11 @@ async def test_admin_refresh():
         elapsed = time.time() - start
         assert response.status_code == 200
         data = response.json()
-        metrics.add_result("/admin/refresh", "POST", response.status_code, elapsed, data.get("status") == "success")
+        metrics.add_result(
+            "/admin/refresh", "POST", response.status_code, elapsed, data.get("status") == "success"
+        )
         assert data["status"] == "success"
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -196,6 +218,7 @@ async def test_admin_scheduler_status():
         assert "running" in data
         assert "jobs" in data
 
+
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_admin_scheduler_trigger():
@@ -208,6 +231,7 @@ async def test_admin_scheduler_trigger():
         metrics.add_result("/admin/scheduler/trigger", "POST", response.status_code, elapsed, True)
         assert "total_fetched" in data or "error" in data
 
+
 @pytest.mark.e2e
 @pytest.mark.asyncio
 async def test_openapi_docs():
@@ -215,8 +239,11 @@ async def test_openapi_docs():
         start = time.time()
         response = await client.get(f"{BASE_URL}/docs")
         elapsed = time.time() - start
-        metrics.add_result("/docs", "GET", response.status_code, elapsed, response.status_code == 200)
+        metrics.add_result(
+            "/docs", "GET", response.status_code, elapsed, response.status_code == 200
+        )
         assert response.status_code == 200
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -227,9 +254,16 @@ async def test_openapi_schema():
         elapsed = time.time() - start
         assert response.status_code == 200
         schema = response.json()
-        metrics.add_result("/openapi.json", "GET", response.status_code, elapsed, "openapi" in schema and "paths" in schema)
+        metrics.add_result(
+            "/openapi.json",
+            "GET",
+            response.status_code,
+            elapsed,
+            "openapi" in schema and "paths" in schema,
+        )
         assert "openapi" in schema
         assert "paths" in schema
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -238,11 +272,16 @@ async def test_rss_guid_uniqueness():
         response = await client.get(f"{BASE_URL}/feed.xml")
         assert response.status_code == 200
         feed = feedparser.parse(response.text)
-        guids = [entry.get("id") or entry.get("guid") for entry in feed.entries if entry.get("id") or entry.get("guid")]
+        guids = [
+            entry.get("id") or entry.get("guid")
+            for entry in feed.entries
+            if entry.get("id") or entry.get("guid")
+        ]
         unique_guids = set(guids)
         duplicates = len(guids) - len(unique_guids)
         metrics.add_result("/feed.xml (GUIDs)", "GET", response.status_code, 0, duplicates == 0)
         assert duplicates == 0
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -278,5 +317,9 @@ def generate_test_report():
     print("-" * 80)
     for result in metrics.results:
         status = "PASS" if result["success"] else "FAIL"
-        print("{:<40} {:<8} {:<7} {:<7}".format(result["endpoint"], result["method"], result["status_code"], status))
+        print(
+            "{:<40} {:<8} {:<7} {:<7}".format(
+                result["endpoint"], result["method"], result["status_code"], status
+            )
+        )
     print("=" * 80 + chr(10))

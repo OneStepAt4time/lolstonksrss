@@ -7,4 +7,4 @@ This module provides RSS 2.0 feed generation functionality for League of Legends
 from src.rss.feed_service import FeedService
 from src.rss.generator import RSSFeedGenerator
 
-__all__ = ['RSSFeedGenerator', 'FeedService']
+__all__ = ["RSSFeedGenerator", "FeedService"]

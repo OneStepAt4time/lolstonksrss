@@ -23,7 +23,7 @@ async def test_feed_generation_performance(tmp_path):
                 guid=f"guid-{i}",
                 source=ArticleSource.LOL_EN_US,
                 description=f"Description {i}",
-                categories=["News"]
+                categories=["News"],
             )
             for i in range(50)
         ]
@@ -37,6 +37,7 @@ async def test_feed_generation_performance(tmp_path):
         assert elapsed < 200
     finally:
         await repo.close()
+
 
 @pytest.mark.performance
 @pytest.mark.asyncio
@@ -52,7 +53,7 @@ async def test_database_query_performance(tmp_path):
                 guid=f"guid-{i}",
                 source=ArticleSource.LOL_EN_US,
                 description=f"Description {i}",
-                categories=["News"]
+                categories=["News"],
             )
             for i in range(200)
         ]

@@ -35,7 +35,7 @@ def sample_articles():
             guid=f"test-guid-{i}",
             source=ArticleSource.LOL_EN_US if i % 2 == 0 else ArticleSource.LOL_IT_IT,
             description=f"Test description {i}",
-            categories=["News", "Test"] if i % 2 == 0 else ["Patch Notes"]
+            categories=["News", "Test"] if i % 2 == 0 else ["Patch Notes"],
         )
         for i in range(1, 21)
     ]
@@ -46,9 +46,11 @@ async def populated_db(temp_db, sample_articles):
     await temp_db.save_many(sample_articles)
     return temp_db
 
+
 # ============================================================================
 # SMOKE TESTS
 # ============================================================================
+
 
 @pytest.mark.smoke
 @pytest.mark.asyncio
@@ -79,7 +81,7 @@ async def test_smoke_article_save(temp_db):
         pub_date=datetime.utcnow(),
         guid="smoke-test-guid",
         source=ArticleSource.LOL_EN_US,
-        description="Smoke test description"
+        description="Smoke test description",
     )
     result = await temp_db.save(article)
     assert result is True
@@ -108,9 +110,11 @@ async def test_smoke_scheduler_creation(temp_db):
     scheduler.stop()
     assert scheduler.is_running is False
 
+
 # ============================================================================
 # COMPLETE WORKFLOW TESTS
 # ============================================================================
+
 
 @pytest.mark.e2e
 @pytest.mark.slow
@@ -157,12 +161,12 @@ async def test_multi_locale_workflow():
 async def test_multi_source_feed_generation(populated_db):
     feed_service = FeedService(populated_db, cache_ttl=300)
     main_feed = feedparser.parse(await feed_service.get_main_feed("http://test/feed.xml"))
-    _en_feed = feedparser.parse(await feed_service.get_feed_by_source(
-        ArticleSource.LOL_EN_US, "http://test/feed/en-us.xml"
-    ))
-    _it_feed = feedparser.parse(await feed_service.get_feed_by_source(
-        ArticleSource.LOL_IT_IT, "http://test/feed/it-it.xml"
-    ))
+    _en_feed = feedparser.parse(
+        await feed_service.get_feed_by_source(ArticleSource.LOL_EN_US, "http://test/feed/en-us.xml")
+    )
+    _it_feed = feedparser.parse(
+        await feed_service.get_feed_by_source(ArticleSource.LOL_IT_IT, "http://test/feed/it-it.xml")
+    )
     assert len(main_feed.entries) > 0
 
 
@@ -178,6 +182,7 @@ async def test_scheduler_manual_trigger(temp_db):
         assert "total_new" in stats
     finally:
         scheduler.stop()
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -238,6 +243,7 @@ async def test_guid_uniqueness(populated_db):
 @pytest.mark.asyncio
 async def test_feed_generation_performance(populated_db):
     import time
+
     feed_service = FeedService(populated_db, cache_ttl=300)
     start = time.perf_counter()
     await feed_service.get_main_feed("http://test/feed.xml")

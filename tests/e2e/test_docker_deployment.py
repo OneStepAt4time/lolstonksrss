@@ -22,12 +22,7 @@ HEALTH_CHECK_WAIT = 35  # seconds for health check to pass
 
 def run_command(cmd: list[str], capture_output: bool = True) -> subprocess.CompletedProcess:
     """Run a command and return the result."""
-    return subprocess.run(
-        cmd,
-        capture_output=capture_output,
-        text=True,
-        check=False
-    )
+    return subprocess.run(cmd, capture_output=capture_output, text=True, check=False)
 
 
 @pytest.mark.e2e
@@ -51,12 +46,9 @@ def test_docker_container_starts():
     run_command(["docker", "rm", "-f", CONTAINER_NAME])
 
     # Run container
-    result = run_command([
-        "docker", "run", "-d",
-        "--name", CONTAINER_NAME,
-        "-p", f"{HOST_PORT}:8000",
-        IMAGE_NAME
-    ])
+    result = run_command(
+        ["docker", "run", "-d", "--name", CONTAINER_NAME, "-p", f"{HOST_PORT}:8000", IMAGE_NAME]
+    )
 
     assert result.returncode == 0, f"Container start failed: {result.stderr}"
 
@@ -74,11 +66,7 @@ def test_docker_health_check():
     """Test Docker health check passes."""
     time.sleep(HEALTH_CHECK_WAIT)
 
-    result = run_command([
-        "docker", "inspect",
-        "--format={{.State.Health.Status}}",
-        CONTAINER_NAME
-    ])
+    result = run_command(["docker", "inspect", "--format={{.State.Health.Status}}", CONTAINER_NAME])
 
     assert "healthy" in result.stdout.lower(), f"Health check failed: {result.stdout}"
 
@@ -103,7 +91,7 @@ def test_docker_endpoints_accessible():
         assert response.headers["content-type"] == "application/rss+xml; charset=utf-8"
 
         feed = feedparser.parse(response.text)
-        assert feed.version == 'rss20'
+        assert feed.version == "rss20"
 
         # Admin refresh endpoint
         response = client.post(f"{BASE_URL}/admin/refresh")
@@ -127,13 +115,13 @@ def test_docker_source_feeds():
         response = client.get(f"{BASE_URL}/feed/en-us.xml")
         assert response.status_code == 200
         feed = feedparser.parse(response.text)
-        assert feed.version == 'rss20'
+        assert feed.version == "rss20"
 
         # Test it-it feed
         response = client.get(f"{BASE_URL}/feed/it-it.xml")
         assert response.status_code == 200
         feed = feedparser.parse(response.text)
-        assert feed.version == 'rss20'
+        assert feed.version == "rss20"
 
         # Test invalid source returns 404
         response = client.get(f"{BASE_URL}/feed/invalid.xml")
@@ -230,10 +218,7 @@ def test_docker_container_cleanup():
 @pytest.mark.docker
 def test_docker_image_size():
     """Test Docker image size is reasonable."""
-    result = run_command([
-        "docker", "images", IMAGE_NAME,
-        "--format", "{{.Size}}"
-    ])
+    result = run_command(["docker", "images", IMAGE_NAME, "--format", "{{.Size}}"])
 
     size_str = result.stdout.strip()
     # Image should be under 500MB (multi-stage build with slim base)
@@ -257,14 +242,22 @@ def test_docker_environment_variables():
     run_command(["docker", "rm", "-f", CONTAINER_NAME])
 
     # Run with custom environment
-    result = run_command([
-        "docker", "run", "-d",
-        "--name", CONTAINER_NAME,
-        "-p", f"{HOST_PORT}:8000",
-        "-e", "LOG_LEVEL=DEBUG",
-        "-e", "UPDATE_INTERVAL_MINUTES=120",
-        IMAGE_NAME
-    ])
+    result = run_command(
+        [
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            CONTAINER_NAME,
+            "-p",
+            f"{HOST_PORT}:8000",
+            "-e",
+            "LOG_LEVEL=DEBUG",
+            "-e",
+            "UPDATE_INTERVAL_MINUTES=120",
+            IMAGE_NAME,
+        ]
+    )
     assert result.returncode == 0
 
     time.sleep(STARTUP_WAIT)

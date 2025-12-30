@@ -33,9 +33,7 @@ class FeedService:
     """
 
     def __init__(
-        self,
-        repository: ArticleRepository,
-        cache_ttl: int = 300  # 5 minutes default
+        self, repository: ArticleRepository, cache_ttl: int = 300  # 5 minutes default
     ) -> None:
         """
         Initialize feed service.
@@ -50,21 +48,19 @@ class FeedService:
         # Initialize generators for different languages
         self.generator_en = RSSFeedGenerator(
             language="en",
-            feed_title=getattr(settings, 'feed_title_en', "League of Legends News"),
+            feed_title=getattr(settings, "feed_title_en", "League of Legends News"),
             feed_description=getattr(
-                settings,
-                'feed_description_en',
-                "Latest League of Legends news and updates"
-            )
+                settings, "feed_description_en", "Latest League of Legends news and updates"
+            ),
         )
         self.generator_it = RSSFeedGenerator(
             language="it",
-            feed_title=getattr(settings, 'feed_title_it', "Notizie League of Legends"),
+            feed_title=getattr(settings, "feed_title_it", "Notizie League of Legends"),
             feed_description=getattr(
                 settings,
-                'feed_description_it',
-                "Ultime notizie e aggiornamenti di League of Legends"
-            )
+                "feed_description_it",
+                "Ultime notizie e aggiornamenti di League of Legends",
+            ),
         )
 
     async def get_main_feed(self, feed_url: str, limit: int = 50) -> str:
@@ -87,7 +83,7 @@ class FeedService:
         cached = self.cache.get(cache_key)
         if cached:
             logger.info("Returning cached main feed")
-            return cached
+            return str(cached)
 
         # Fetch articles from database
         articles = await self.repository.get_latest(limit=limit)
@@ -103,10 +99,7 @@ class FeedService:
         return feed_xml
 
     async def get_feed_by_source(
-        self,
-        source: ArticleSource,
-        feed_url: str,
-        limit: int = 50
+        self, source: ArticleSource, feed_url: str, limit: int = 50
     ) -> str:
         """
         Get RSS feed filtered by source.
@@ -128,16 +121,13 @@ class FeedService:
         cached = self.cache.get(cache_key)
         if cached:
             logger.info(f"Returning cached feed for {source.value}")
-            return cached
+            return str(cached)
 
         # Fetch articles for specific source
         articles = await self.repository.get_latest(limit=limit, source=source.value)
 
         # Choose generator based on source language
-        generator = (
-            self.generator_it if source == ArticleSource.LOL_IT_IT
-            else self.generator_en
-        )
+        generator = self.generator_it if source == ArticleSource.LOL_IT_IT else self.generator_en
 
         # Generate feed
         feed_xml = generator.generate_feed_by_source(articles, source, feed_url)
@@ -149,12 +139,7 @@ class FeedService:
 
         return feed_xml
 
-    async def get_feed_by_category(
-        self,
-        category: str,
-        feed_url: str,
-        limit: int = 50
-    ) -> str:
+    async def get_feed_by_category(self, category: str, feed_url: str, limit: int = 50) -> str:
         """
         Get RSS feed filtered by category.
 
@@ -175,16 +160,14 @@ class FeedService:
         cached = self.cache.get(cache_key)
         if cached:
             logger.info(f"Returning cached feed for category {category}")
-            return cached
+            return str(cached)
 
         # Fetch more articles than needed since we filter by category
         # This ensures we have enough articles after filtering
         articles = await self.repository.get_latest(limit=limit * 2)
 
         # Generate feed with category filter
-        feed_xml = self.generator_en.generate_feed_by_category(
-            articles, category, feed_url
-        )
+        feed_xml = self.generator_en.generate_feed_by_category(articles, category, feed_url)
 
         # Cache the result
         self.cache.set(cache_key, feed_xml)

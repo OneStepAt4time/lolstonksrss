@@ -20,14 +20,14 @@ from src.models import Article, ArticleSource
 from src.utils.cache import TTLCache
 
 # Mock HTML with buildId
-MOCK_HTML = '''
+MOCK_HTML = """
 <!DOCTYPE html>
 <html>
 <body>
 <script id="__NEXT_DATA__" type="application/json">{"buildId":"test-build-id-123"}</script>
 </body>
 </html>
-'''
+"""
 
 # Mock API response
 MOCK_API_RESPONSE = {
@@ -42,9 +42,11 @@ MOCK_API_RESPONSE = {
                             "publishedAt": "2025-12-28T10:00:00.000Z",
                             "description": {"body": "Test description 1"},
                             "category": {"title": "News"},
-                            "action": {"url": "https://www.leagueoflegends.com/en-us/news/article-1"},
+                            "action": {
+                                "url": "https://www.leagueoflegends.com/en-us/news/article-1"
+                            },
                             "media": {"url": "https://example.com/image1.jpg"},
-                            "analytics": {"contentId": "test-guid-123"}
+                            "analytics": {"contentId": "test-guid-123"},
                         },
                         {
                             "title": "Test Article 2",
@@ -55,18 +57,15 @@ MOCK_API_RESPONSE = {
                                 "type": "youtube_video",
                                 "payload": {
                                     "url": "https://www.youtube.com/watch?v=test",
-                                    "youtubeId": "test"
-                                }
+                                    "youtubeId": "test",
+                                },
                             },
                             "media": {"url": "https://example.com/image2.jpg"},
-                            "analytics": {"contentId": "test-guid-456"}
-                        }
-                    ]
+                            "analytics": {"contentId": "test-guid-456"},
+                        },
+                    ],
                 },
-                {
-                    "type": "someOtherBlade",
-                    "items": []
-                }
+                {"type": "someOtherBlade", "items": []},
             ]
         }
     }
@@ -82,10 +81,7 @@ def mock_cache() -> TTLCache:
 @pytest.fixture
 def api_client(mock_cache: TTLCache) -> LoLNewsAPIClient:
     """Provide a configured API client for testing."""
-    return LoLNewsAPIClient(
-        base_url="https://www.leagueoflegends.com",
-        cache=mock_cache
-    )
+    return LoLNewsAPIClient(base_url="https://www.leagueoflegends.com", cache=mock_cache)
 
 
 class TestGetBuildId:
@@ -98,39 +94,39 @@ class TestGetBuildId:
         mock_response.text = MOCK_HTML
         mock_response.raise_for_status = MagicMock()
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
             mock_client.get.return_value = mock_response
             mock_client_class.return_value = mock_client
 
-            build_id = await api_client.get_build_id('en-us')
+            build_id = await api_client.get_build_id("en-us")
 
-            assert build_id == 'test-build-id-123'
+            assert build_id == "test-build-id-123"
             mock_client.get.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_build_id_cached(self, api_client: LoLNewsAPIClient) -> None:
         """Test that buildId is retrieved from cache on second call."""
         # Pre-populate cache
-        api_client.cache.set('buildid_en-us', 'cached-build-id')
+        api_client.cache.set("buildid_en-us", "cached-build-id")
 
-        with patch('httpx.AsyncClient') as mock_client_class:
-            build_id = await api_client.get_build_id('en-us')
+        with patch("httpx.AsyncClient") as mock_client_class:
+            build_id = await api_client.get_build_id("en-us")
 
             # Should use cached value without making HTTP request
-            assert build_id == 'cached-build-id'
+            assert build_id == "cached-build-id"
             mock_client_class.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_get_build_id_not_found(self, api_client: LoLNewsAPIClient) -> None:
         """Test error when buildId not found in HTML."""
         mock_response = AsyncMock()
-        mock_response.text = '<html><body>No buildId here</body></html>'
+        mock_response.text = "<html><body>No buildId here</body></html>"
         mock_response.raise_for_status = MagicMock()
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
@@ -138,7 +134,7 @@ class TestGetBuildId:
             mock_client_class.return_value = mock_client
 
             with pytest.raises(ValueError, match="BuildID not found"):
-                await api_client.get_build_id('en-us')
+                await api_client.get_build_id("en-us")
 
     @pytest.mark.asyncio
     async def test_get_build_id_http_error(self, api_client: LoLNewsAPIClient) -> None:
@@ -148,7 +144,7 @@ class TestGetBuildId:
             side_effect=httpx.HTTPStatusError("404", request=Mock(), response=Mock())
         )
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
@@ -156,7 +152,7 @@ class TestGetBuildId:
             mock_client_class.return_value = mock_client
 
             with pytest.raises(httpx.HTTPStatusError):
-                await api_client.get_build_id('en-us')
+                await api_client.get_build_id("en-us")
 
     @pytest.mark.asyncio
     async def test_get_build_id_different_locales(self, api_client: LoLNewsAPIClient) -> None:
@@ -165,23 +161,23 @@ class TestGetBuildId:
         mock_response.text = MOCK_HTML
         mock_response.raise_for_status = MagicMock()
 
-        with patch('httpx.AsyncClient') as mock_client_class:
+        with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
             mock_client.get.return_value = mock_response
             mock_client_class.return_value = mock_client
 
-            build_id_en = await api_client.get_build_id('en-us')
-            build_id_it = await api_client.get_build_id('it-it')
+            build_id_en = await api_client.get_build_id("en-us")
+            build_id_it = await api_client.get_build_id("it-it")
 
             # Both should return same buildId
-            assert build_id_en == 'test-build-id-123'
-            assert build_id_it == 'test-build-id-123'
+            assert build_id_en == "test-build-id-123"
+            assert build_id_it == "test-build-id-123"
 
             # But they should be cached separately
-            assert api_client.cache.get('buildid_en-us') == 'test-build-id-123'
-            assert api_client.cache.get('buildid_it-it') == 'test-build-id-123'
+            assert api_client.cache.get("buildid_en-us") == "test-build-id-123"
+            assert api_client.cache.get("buildid_it-it") == "test-build-id-123"
 
 
 class TestFetchNews:
@@ -190,30 +186,31 @@ class TestFetchNews:
     @pytest.mark.asyncio
     async def test_fetch_news_success(self, api_client: LoLNewsAPIClient) -> None:
         """Test successful news fetching."""
+
         # Mock get_build_id as coroutine
         async def mock_get_build_id(locale: str) -> str:
-            return 'test-build-id'
+            return "test-build-id"
 
-        with patch.object(api_client, 'get_build_id', side_effect=mock_get_build_id):
+        with patch.object(api_client, "get_build_id", side_effect=mock_get_build_id):
             mock_response = AsyncMock()
             mock_response.status_code = 200
             mock_response.json = Mock(return_value=MOCK_API_RESPONSE)
             mock_response.raise_for_status = Mock()
 
-            with patch('httpx.AsyncClient') as mock_client_class:
+            with patch("httpx.AsyncClient") as mock_client_class:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
                 mock_client.get = AsyncMock(return_value=mock_response)
                 mock_client_class.return_value = mock_client
 
-                articles = await api_client.fetch_news('en-us')
+                articles = await api_client.fetch_news("en-us")
 
                 assert len(articles) == 2
                 assert all(isinstance(a, Article) for a in articles)
-                assert articles[0].title == 'Test Article 1'
+                assert articles[0].title == "Test Article 1"
                 assert articles[0].source == ArticleSource.LOL_EN_US
-                assert articles[1].title == 'Test Article 2'
+                assert articles[1].title == "Test Article 2"
 
     @pytest.mark.asyncio
     async def test_fetch_news_404_retry(self, api_client: LoLNewsAPIClient) -> None:
@@ -237,17 +234,17 @@ class TestFetchNews:
             return mock_response
 
         async def mock_get_build_id(locale: str) -> str:
-            return 'test-build-id'
+            return "test-build-id"
 
-        with patch.object(api_client, 'get_build_id', side_effect=mock_get_build_id):
-            with patch('httpx.AsyncClient') as mock_client_class:
+        with patch.object(api_client, "get_build_id", side_effect=mock_get_build_id):
+            with patch("httpx.AsyncClient") as mock_client_class:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
                 mock_client.get = mock_get
                 mock_client_class.return_value = mock_client
 
-                articles = await api_client.fetch_news('en-us')
+                articles = await api_client.fetch_news("en-us")
 
                 assert len(articles) == 2
                 assert call_count == 2  # Should retry after 404
@@ -255,23 +252,24 @@ class TestFetchNews:
     @pytest.mark.asyncio
     async def test_fetch_news_it_locale(self, api_client: LoLNewsAPIClient) -> None:
         """Test fetching Italian locale news."""
-        async def mock_get_build_id(locale: str) -> str:
-            return 'test-build-id'
 
-        with patch.object(api_client, 'get_build_id', side_effect=mock_get_build_id):
+        async def mock_get_build_id(locale: str) -> str:
+            return "test-build-id"
+
+        with patch.object(api_client, "get_build_id", side_effect=mock_get_build_id):
             mock_response = AsyncMock()
             mock_response.status_code = 200
             mock_response.json = Mock(return_value=MOCK_API_RESPONSE)
             mock_response.raise_for_status = Mock()
 
-            with patch('httpx.AsyncClient') as mock_client_class:
+            with patch("httpx.AsyncClient") as mock_client_class:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
                 mock_client.get = AsyncMock(return_value=mock_response)
                 mock_client_class.return_value = mock_client
 
-                articles = await api_client.fetch_news('it-it')
+                articles = await api_client.fetch_news("it-it")
 
                 assert len(articles) == 2
                 # All articles should have Italian source
@@ -280,14 +278,14 @@ class TestFetchNews:
     @pytest.mark.asyncio
     async def test_fetch_news_http_error(self, api_client: LoLNewsAPIClient) -> None:
         """Test handling of HTTP errors during fetch."""
-        with patch.object(api_client, 'get_build_id', return_value='test-build-id'):
+        with patch.object(api_client, "get_build_id", return_value="test-build-id"):
             mock_response = AsyncMock()
             mock_response.status_code = 500
             mock_response.raise_for_status = MagicMock(
                 side_effect=httpx.HTTPStatusError("500", request=Mock(), response=Mock())
             )
 
-            with patch('httpx.AsyncClient') as mock_client_class:
+            with patch("httpx.AsyncClient") as mock_client_class:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
@@ -295,7 +293,7 @@ class TestFetchNews:
                 mock_client_class.return_value = mock_client
 
                 with pytest.raises(httpx.HTTPStatusError):
-                    await api_client.fetch_news('en-us')
+                    await api_client.fetch_news("en-us")
 
     @pytest.mark.asyncio
     async def test_fetch_news_empty_response(self, api_client: LoLNewsAPIClient) -> None:
@@ -303,22 +301,22 @@ class TestFetchNews:
         empty_response = {"pageProps": {"page": {"blades": []}}}
 
         async def mock_get_build_id(locale: str) -> str:
-            return 'test-build-id'
+            return "test-build-id"
 
-        with patch.object(api_client, 'get_build_id', side_effect=mock_get_build_id):
+        with patch.object(api_client, "get_build_id", side_effect=mock_get_build_id):
             mock_response = AsyncMock()
             mock_response.status_code = 200
             mock_response.json = Mock(return_value=empty_response)
             mock_response.raise_for_status = Mock()
 
-            with patch('httpx.AsyncClient') as mock_client_class:
+            with patch("httpx.AsyncClient") as mock_client_class:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
                 mock_client.get = AsyncMock(return_value=mock_response)
                 mock_client_class.return_value = mock_client
 
-                articles = await api_client.fetch_news('en-us')
+                articles = await api_client.fetch_news("en-us")
 
                 assert articles == []
 
@@ -328,31 +326,23 @@ class TestParseArticles:
 
     def test_parse_articles_success(self, api_client: LoLNewsAPIClient) -> None:
         """Test successful article parsing."""
-        articles = api_client._parse_articles(MOCK_API_RESPONSE, 'en-us')
+        articles = api_client._parse_articles(MOCK_API_RESPONSE, "en-us")
 
         assert len(articles) == 2
         assert all(isinstance(a, Article) for a in articles)
 
     def test_parse_articles_no_article_grid(self, api_client: LoLNewsAPIClient) -> None:
         """Test parsing when no articleCardGrid blade exists."""
-        response = {
-            "pageProps": {
-                "page": {
-                    "blades": [
-                        {"type": "otherBlade", "items": []}
-                    ]
-                }
-            }
-        }
+        response = {"pageProps": {"page": {"blades": [{"type": "otherBlade", "items": []}]}}}
 
-        articles = api_client._parse_articles(response, 'en-us')
+        articles = api_client._parse_articles(response, "en-us")
         assert articles == []
 
     def test_parse_articles_malformed_data(self, api_client: LoLNewsAPIClient) -> None:
         """Test parsing with malformed data structure."""
         response = {"pageProps": {}}
 
-        articles = api_client._parse_articles(response, 'en-us')
+        articles = api_client._parse_articles(response, "en-us")
         assert articles == []
 
     def test_parse_articles_partial_failure(self, api_client: LoLNewsAPIClient) -> None:
@@ -378,15 +368,15 @@ class TestParseArticles:
                                     "title": "Another Good Article",
                                     "publishedAt": "2025-12-27T10:00:00.000Z",
                                     "action": {"url": "https://example.com/article2"},
-                                }
-                            ]
+                                },
+                            ],
                         }
                     ]
                 }
             }
         }
 
-        articles = api_client._parse_articles(response, 'en-us')
+        articles = api_client._parse_articles(response, "en-us")
         assert len(articles) == 2  # Two valid articles
 
 
@@ -402,10 +392,10 @@ class TestTransformToArticle:
             "category": {"title": "News"},
             "action": {"url": "https://example.com/article"},
             "media": {"url": "https://example.com/image.jpg"},
-            "analytics": {"contentId": "test-guid"}
+            "analytics": {"contentId": "test-guid"},
         }
 
-        article = api_client._transform_to_article(item, 'en-us')
+        article = api_client._transform_to_article(item, "en-us")
 
         assert article.title == "Test Article"
         assert article.url == "https://example.com/article"
@@ -423,14 +413,11 @@ class TestTransformToArticle:
             "publishedAt": "2025-12-28T10:00:00.000Z",
             "action": {
                 "type": "youtube_video",
-                "payload": {
-                    "url": "https://www.youtube.com/watch?v=test",
-                    "youtubeId": "test"
-                }
-            }
+                "payload": {"url": "https://www.youtube.com/watch?v=test", "youtubeId": "test"},
+            },
         }
 
-        article = api_client._transform_to_article(item, 'en-us')
+        article = api_client._transform_to_article(item, "en-us")
 
         assert article.title == "Video Article"
         assert article.url == "https://www.youtube.com/watch?v=test"
@@ -443,7 +430,7 @@ class TestTransformToArticle:
             "action": {"url": "https://example.com/articolo"},
         }
 
-        article = api_client._transform_to_article(item, 'it-it')
+        article = api_client._transform_to_article(item, "it-it")
 
         assert article.source == ArticleSource.LOL_IT_IT
 
@@ -455,7 +442,7 @@ class TestTransformToArticle:
             "action": {"url": "https://example.com/article"},
         }
 
-        article = api_client._transform_to_article(item, 'en-us')
+        article = api_client._transform_to_article(item, "en-us")
 
         assert article.title == "Minimal Article"
         assert article.description == ""
@@ -472,7 +459,7 @@ class TestTransformToArticle:
         }
 
         with pytest.raises(ValueError, match="Article URL not found"):
-            api_client._transform_to_article(item, 'en-us')
+            api_client._transform_to_article(item, "en-us")
 
     def test_transform_missing_publish_date(self, api_client: LoLNewsAPIClient) -> None:
         """Test error when publishedAt is missing."""
@@ -482,7 +469,7 @@ class TestTransformToArticle:
         }
 
         with pytest.raises(ValueError, match="Article publishedAt not found"):
-            api_client._transform_to_article(item, 'en-us')
+            api_client._transform_to_article(item, "en-us")
 
     def test_transform_date_format(self, api_client: LoLNewsAPIClient) -> None:
         """Test date parsing with different formats."""
@@ -492,7 +479,7 @@ class TestTransformToArticle:
             "action": {"url": "https://example.com/article"},
         }
 
-        article = api_client._transform_to_article(item, 'en-us')
+        article = api_client._transform_to_article(item, "en-us")
 
         assert isinstance(article.pub_date, datetime)
         assert article.pub_date.year == 2025
@@ -509,29 +496,29 @@ class TestCacheIntegration:
     async def test_cache_isolation_between_locales(self, api_client: LoLNewsAPIClient) -> None:
         """Test that different locales maintain separate cache entries."""
         # Pre-populate cache with different values
-        api_client.cache.set('buildid_en-us', 'en-build-id')
-        api_client.cache.set('buildid_it-it', 'it-build-id')
+        api_client.cache.set("buildid_en-us", "en-build-id")
+        api_client.cache.set("buildid_it-it", "it-build-id")
 
-        build_id_en = await api_client.get_build_id('en-us')
-        build_id_it = await api_client.get_build_id('it-it')
+        build_id_en = await api_client.get_build_id("en-us")
+        build_id_it = await api_client.get_build_id("it-it")
 
-        assert build_id_en == 'en-build-id'
-        assert build_id_it == 'it-build-id'
+        assert build_id_en == "en-build-id"
+        assert build_id_it == "it-build-id"
 
     @pytest.mark.asyncio
     async def test_cache_invalidation(self, api_client: LoLNewsAPIClient) -> None:
         """Test cache invalidation on 404."""
         # Pre-populate cache
-        api_client.cache.set('buildid_en-us', 'old-build-id')
+        api_client.cache.set("buildid_en-us", "old-build-id")
 
         # Verify it's in cache
-        assert api_client.cache.get('buildid_en-us') == 'old-build-id'
+        assert api_client.cache.get("buildid_en-us") == "old-build-id"
 
         # Simulate 404 response
         async def mock_get_build_id(locale: str) -> str:
-            return 'new-build-id'
+            return "new-build-id"
 
-        with patch.object(api_client, 'get_build_id', side_effect=mock_get_build_id):
+        with patch.object(api_client, "get_build_id", side_effect=mock_get_build_id):
             mock_response_404 = AsyncMock()
             mock_response_404.status_code = 404
             mock_response_404.raise_for_status = Mock()
@@ -543,14 +530,14 @@ class TestCacheIntegration:
 
             responses = [mock_response_404, mock_response_200]
 
-            with patch('httpx.AsyncClient') as mock_client_class:
+            with patch("httpx.AsyncClient") as mock_client_class:
                 mock_client = AsyncMock()
                 mock_client.__aenter__.return_value = mock_client
                 mock_client.__aexit__.return_value = None
                 mock_client.get = AsyncMock(side_effect=responses)
                 mock_client_class.return_value = mock_client
 
-                await api_client.fetch_news('en-us')
+                await api_client.fetch_news("en-us")
 
                 # Cache should have been invalidated
                 # Note: get_build_id is mocked, so actual cache won't be populated

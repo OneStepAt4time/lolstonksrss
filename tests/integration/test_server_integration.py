@@ -32,7 +32,9 @@ async def test_full_server_workflow() -> None:
 
     service = AsyncMock()
     service.get_main_feed = AsyncMock(return_value='<?xml version="1.0"?><rss version="2.0"></rss>')
-    service.get_feed_by_source = AsyncMock(return_value='<?xml version="1.0"?><rss version="2.0"></rss>')
+    service.get_feed_by_source = AsyncMock(
+        return_value='<?xml version="1.0"?><rss version="2.0"></rss>'
+    )
 
     app_state["repository"] = repo
     app_state["feed_service"] = service
@@ -96,7 +98,9 @@ async def test_server_with_real_data() -> None:
     repo.get_latest = AsyncMock(return_value=test_articles)
 
     service = AsyncMock()
-    service.get_main_feed = AsyncMock(return_value='<?xml version="1.0"?><rss><channel><item><title>Test Article 1</title></item></channel></rss>')
+    service.get_main_feed = AsyncMock(
+        return_value='<?xml version="1.0"?><rss><channel><item><title>Test Article 1</title></item></channel></rss>'
+    )
     service.get_feed_by_source = AsyncMock(return_value='<?xml version="1.0"?><rss></rss>')
     service.get_feed_by_category = AsyncMock(return_value='<?xml version="1.0"?><rss></rss>')
 
@@ -139,7 +143,6 @@ async def test_concurrent_requests() -> None:
 
     transport = ASGITransport(app=app)  # type: ignore[arg-type]
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-
         # Create multiple concurrent requests
         async def fetch_feed(endpoint: str) -> int:
             response = await client.get(endpoint)

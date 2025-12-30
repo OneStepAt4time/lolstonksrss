@@ -97,10 +97,7 @@ class TTLCache:
             Number of items removed
         """
         now = datetime.utcnow()
-        expired_keys = [
-            key for key, (_, expiry) in self._cache.items()
-            if now > expiry
-        ]
+        expired_keys = [key for key, (_, expiry) in self._cache.items() if now > expiry]
 
         for key in expired_keys:
             del self._cache[key]
