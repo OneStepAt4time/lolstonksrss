@@ -7,6 +7,10 @@ services:
     container_name: lolstonksrss
     restart: unless-stopped
 
+    # Load environment variables from .env file (not committed to git)
+    env_file:
+      - .env
+
     ports:
       - "8002:8000"
 
