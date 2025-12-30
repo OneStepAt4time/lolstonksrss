@@ -30,9 +30,13 @@ def scheduler(mock_repository: AsyncMock) -> NewsScheduler:
 
 @pytest.mark.asyncio
 async def test_github_pages_sync_disabled_by_default(
-    scheduler: NewsScheduler, mock_repository: AsyncMock
+    scheduler: NewsScheduler, mock_repository: AsyncMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test that GitHub Pages sync is disabled by default."""
+    # Ensure env vars don't interfere with test (remove real .env values)
+    monkeypatch.delenv("ENABLE_GITHUB_PAGES_SYNC", raising=False)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
     # Mock settings to disable GitHub sync (test default behavior)
     with patch("src.services.scheduler.settings") as mock_settings:
         mock_settings.enable_github_pages_sync = False
