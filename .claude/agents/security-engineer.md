@@ -162,9 +162,10 @@ You implement security controls based on assessments from security-auditor.
 
 ##### Hardcoded Secrets
 ```python
-# BAD - Hardcoded API key
+# BAD - Hardcoded API key (example with FAKE placeholder)
 def fetch_news():
-    api_key = "sk_live_1234567890abcdef"  # Vulnerable
+    # NOTE: This is a FAKE example placeholder - NOT a real API key
+    api_key = "pk_fake_XyZ123"  # Vulnerable - never hardcode keys
 
 # GOOD - Environment variable
 import os

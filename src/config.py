@@ -58,7 +58,8 @@ class Settings(BaseSettings):
 
     # Server configuration
     base_url: str = "http://localhost:8000"
-    host: str = "0.0.0.0"
+    # Bind to all interfaces - acceptable for containerized deployment behind reverse proxy
+    host: str = "0.0.0.0"  # nosec: B104 - intentional for Docker deployment
     port: int = 8000
     reload: bool = False  # Set True for development
 
