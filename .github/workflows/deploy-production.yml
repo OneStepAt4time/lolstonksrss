@@ -65,7 +65,13 @@ jobs:
       - name: Deploy to Production
         run: |
           echo "Deploying to production environment..."
-          echo "Image: ${{ steps.meta.outputs.tags }}"
+          echo "Docker image pushed to:"
+          echo "${{ steps.meta.outputs.tags }}"
+          echo ""
+          echo "Available image tags:"
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            echo "  - $tag"
+          done
           # Add deployment commands here
           # Example: kubectl set image deployment/lolstonksrss lolstonksrss=${{ steps.meta.outputs.tags }}
 
