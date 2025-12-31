@@ -268,6 +268,9 @@ class WorktreeManager:
         # Setup venv symlink
         self.setup_venv_link(worktree_path)
 
+        # Setup environment and config
+        self.setup_environment(worktree_path, branch_name, port)
+
         # Get commit SHA
         try:
             result = subprocess.run(
@@ -288,6 +291,69 @@ class WorktreeManager:
             db_suffix=self._get_db_suffix(branch_name),
             commit=commit,
         )
+
+    def setup_environment(self, worktree_path: Path, branch_name: str, port: int) -> None:
+        """
+        Setup environment variables and configuration for the worktree.
+
+        1. Copies .env from main repo and appends WORKTREE_* variables.
+        2. Copies .claude/ config files if they exist.
+
+        Args:
+            worktree_path: Path to the worktree directory
+            branch_name: Name of the branch
+            port: Allocated port
+        """
+        import shutil
+
+        # 1. Setup .env
+        main_env = self.repo_root / ".env"
+        worktree_env = worktree_path / ".env"
+
+        if main_env.exists():
+            try:
+                # Read main .env
+                content = main_env.read_text(encoding="utf-8")
+
+                # Append worktree specific config
+                db_suffix = self._get_db_suffix(branch_name)
+
+                # Ensure we have a newline before appending
+                if content and not content.endswith("\n"):
+                    content += "\n"
+
+                content += "\n# --- Worktree Configuration (Auto-generated) ---\n"
+                content += "WORKTREE_MODE=True\n"
+                content += f"WORKTREE_BRANCH={branch_name}\n"
+                content += f"WORKTREE_PORT={port}\n"
+                content += f"WORKTREE_DB_SUFFIX={db_suffix}\n"
+                content += f"PORT={port}\n"  # For tools that might use PORT directly
+
+                worktree_env.write_text(content, encoding="utf-8")
+                logger.info(f"Created .env at {worktree_env} with worktree config")
+            except Exception as e:
+                logger.error(f"Failed to setup .env: {e}")
+        else:
+            logger.warning("No .env found in main repo to copy")
+
+        # 2. Setup .claude config
+        main_claude = self.repo_root / ".claude"
+        worktree_claude = worktree_path / ".claude"
+
+        # Ensure .claude exists in worktree
+        worktree_claude.mkdir(parents=True, exist_ok=True)
+
+        # Copy settings files if they exist
+        for config_file in ["settings.json", "settings.local.json", "CLAUDE.md"]:
+            src = main_claude / config_file
+            dst = worktree_claude / config_file
+
+            if src.exists() and not dst.exists():
+                try:
+                    shutil.copy2(src, dst)
+                    logger.info(f"Copied {config_file} to worktree")
+                except Exception as e:
+                    logger.warning(f"Failed to copy {config_file}: {e}")
 
     def setup_venv_link(self, worktree_path: Path) -> None:
         """
