@@ -5,7 +5,7 @@ This module tests the FeedService class to ensure proper caching,
 feed generation, and database integration.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import feedparser
@@ -26,7 +26,7 @@ def mock_repository() -> AsyncMock:
             Article(
                 title="Test Article 1",
                 url="https://example.com/test1",
-                pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+                pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
                 guid="test-1",
                 source=ArticleSource.LOL_EN_US,
                 description="First test article",
@@ -35,7 +35,7 @@ def mock_repository() -> AsyncMock:
             Article(
                 title="Test Article 2",
                 url="https://example.com/test2",
-                pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=UTC),
+                pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=timezone.utc),
                 guid="test-2",
                 source=ArticleSource.LOL_EN_US,
                 description="Second test article",
@@ -44,7 +44,7 @@ def mock_repository() -> AsyncMock:
             Article(
                 title="Articolo di Test 3",
                 url="https://example.com/test3",
-                pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=UTC),
+                pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=timezone.utc),
                 guid="test-3",
                 source=ArticleSource.LOL_IT_IT,
                 description="Terzo articolo di test",
@@ -161,7 +161,7 @@ async def test_get_feed_by_source_it(mock_repository: AsyncMock) -> None:
             Article(
                 title="Articolo Italiano",
                 url="https://example.com/it",
-                pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+                pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
                 guid="it-1",
                 source=ArticleSource.LOL_IT_IT,
                 description="Descrizione italiana",

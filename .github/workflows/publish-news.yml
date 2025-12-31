@@ -32,7 +32,10 @@ on:
     paths:
       - '.github/workflows/publish-news.yml'
       - 'scripts/generate_news_page.py'
+      - 'scripts/generate_rss_feeds.py'
       - 'templates/news_page.html'
+      - 'src/rss/generator.py'
+      - 'src/models.py'
 
 # Ensure only one workflow runs at a time to prevent conflicts
 concurrency:
@@ -140,9 +143,15 @@ jobs:
           uv run python scripts/generate_news_page.py --output news.html --limit "$ARTICLE_LIMIT"
         timeout-minutes: 2
 
+      - name: Generate RSS feeds
+        run: |
+          ARTICLE_LIMIT="${{ github.event.inputs.article_limit || '100' }}"
+          uv run python scripts/generate_rss_feeds.py --output _site --limit "$ARTICLE_LIMIT"
+        timeout-minutes: 2
+
       - name: Create GitHub Pages directory structure
         run: |
-          mkdir -p _site
+          # Copy HTML page
           cp news.html _site/index.html
 
           # Create a simple redirect page for news.html
@@ -152,6 +161,12 @@ jobs:
           if [ -d "static" ]; then
             cp -r static _site/
           fi
+
+          # Verify feed files were generated
+          echo "Verifying generated files:"
+          ls -la _site/
+          echo "Feed subdirectory:"
+          ls -la _site/feed/ || echo "No feed subdirectory found"
 
       - name: Add .nojekyll file
         run: touch _site/.nojekyll
@@ -169,11 +184,44 @@ jobs:
         run: |
           echo "News page deployed to: ${{ steps.deployment.outputs.page_url }}"
           echo "Direct link: ${{ steps.deployment.outputs.page_url }}index.html"
+          echo ""
+          echo "RSS Feeds:"
+          echo "  Main feed (all articles): ${{ steps.deployment.outputs.page_url }}feed.xml"
+          echo "  English only: ${{ steps.deployment.outputs.page_url }}feed/en-us.xml"
+          echo "  Italian only: ${{ steps.deployment.outputs.page_url }}feed/it-it.xml"
 
-      - name: Verify deployment
+      - name: Verify RSS feed deployment
         run: |
           sleep 10
-          curl -sSf "${{ steps.deployment.outputs.page_url }}" > /dev/null && echo "Deployment successful!" || echo "Warning: Deployment may still be propagating"
+          echo "Verifying RSS feeds are accessible..."
+
+          # Verify main feed
+          if curl -sSf "${{ steps.deployment.outputs.page_url }}feed.xml" > /dev/null; then
+            echo "✓ Main feed is accessible"
+          else
+            echo "✗ Main feed may not be accessible yet"
+          fi
+
+          # Verify English feed
+          if curl -sSf "${{ steps.deployment.outputs.page_url }}feed/en-us.xml" > /dev/null; then
+            echo "✓ English feed is accessible"
+          else
+            echo "✗ English feed may not be accessible yet"
+          fi
+
+          # Verify Italian feed
+          if curl -sSf "${{ steps.deployment.outputs.page_url }}feed/it-it.xml" > /dev/null; then
+            echo "✓ Italian feed is accessible"
+          else
+            echo "✗ Italian feed may not be accessible yet"
+          fi
+
+          echo "Deployment verification complete!"
+        continue-on-error: true
+
+      - name: Verify HTML page deployment
+        run: |
+          curl -sSf "${{ steps.deployment.outputs.page_url }}" > /dev/null && echo "HTML page deployment successful!" || echo "Warning: HTML page deployment may still be propagating"
         continue-on-error: true
 
       # Cache database for next run (optional - reduces API calls)

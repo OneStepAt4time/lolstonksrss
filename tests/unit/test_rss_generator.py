@@ -5,7 +5,7 @@ This module tests the RSSFeedGenerator class to ensure RSS 2.0 compliance
 and proper handling of Article objects.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 import feedparser
 import pytest
@@ -21,7 +21,7 @@ def sample_articles() -> list[Article]:
         Article(
             title="New Champion Release: Briar",
             url="https://www.leagueoflegends.com/news/champion-briar",
-            pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+            pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
             guid="article-champion-briar",
             source=ArticleSource.LOL_EN_US,
             description="A new champion is coming to the Rift",
@@ -33,7 +33,7 @@ def sample_articles() -> list[Article]:
         Article(
             title="Patch Notes 14.1",
             url="https://www.leagueoflegends.com/news/patch-14-1",
-            pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=UTC),
+            pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=timezone.utc),
             guid="article-patch-14-1",
             source=ArticleSource.LOL_EN_US,
             description="Latest patch notes for Season 2025",
@@ -42,7 +42,7 @@ def sample_articles() -> list[Article]:
         Article(
             title="Arcane Season 2 Announced",
             url="https://www.leagueoflegends.com/news/arcane-season-2",
-            pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=UTC),
+            pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=timezone.utc),
             guid="article-arcane-s2",
             source=ArticleSource.LOL_IT_IT,
             description="Arcane returns with a new season",
@@ -256,7 +256,7 @@ def test_italian_language_generator() -> None:
     article = Article(
         title="Nuova Campionessa: Briar",
         url="https://www.leagueoflegends.com/it-it/news/champion-briar",
-        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="article-briar-it",
         source=ArticleSource.LOL_IT_IT,
         description="Una nuova campionessa arriva nella Landa",
@@ -279,7 +279,7 @@ def test_article_without_optional_fields() -> None:
     article = Article(
         title="Minimal Article",
         url="https://example.com/minimal",
-        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="minimal-article",
         source=ArticleSource.LOL_EN_US,
     )
@@ -301,7 +301,7 @@ def test_feed_date_format() -> None:
     article = Article(
         title="Test Article",
         url="https://example.com/test",
-        pub_date=datetime(2025, 12, 28, 10, 30, 45, tzinfo=UTC),
+        pub_date=datetime(2025, 12, 28, 10, 30, 45, tzinfo=timezone.utc),
         guid="test-date",
         source=ArticleSource.LOL_EN_US,
     )
@@ -330,7 +330,7 @@ def test_feed_content_html() -> None:
     article = Article(
         title="Article with HTML",
         url="https://example.com/html",
-        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="html-article",
         source=ArticleSource.LOL_EN_US,
         content="<p>This is <strong>HTML</strong> content</p>",
@@ -392,7 +392,7 @@ def test_generate_feed_preserves_title() -> None:
     article = Article(
         title="Test",
         url="https://example.com/test",
-        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=UTC),
+        pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="test",
         source=ArticleSource.LOL_EN_US,
         categories=["News"],

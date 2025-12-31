@@ -6,7 +6,7 @@ into RSS 2.0 compliant XML feeds using the feedgen library.
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from feedgen.feed import FeedGenerator
 
@@ -76,7 +76,7 @@ class RSSFeedGenerator:
         fg.language(self.language)
 
         # Optional channel elements
-        fg.lastBuildDate(datetime.now(UTC))
+        fg.lastBuildDate(datetime.now(timezone.utc))
         fg.generator("LoL Stonks RSS Generator")
 
         # Add articles as feed entries
@@ -123,7 +123,7 @@ class RSSFeedGenerator:
         # Ensure pub_date is timezone-aware
         pub_date = article.pub_date
         if pub_date.tzinfo is None:
-            pub_date = pub_date.replace(tzinfo=UTC)
+            pub_date = pub_date.replace(tzinfo=timezone.utc)
         fe.pubDate(pub_date)
 
         # Optional fields

@@ -6,7 +6,7 @@ and error handling.
 """
 
 from collections.abc import AsyncGenerator
-from datetime import UTC
+from datetime import timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -102,7 +102,7 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
                 title="Test Article",
                 url="https://example.com/article",
                 description="Test description",
-                pub_date=datetime(2024, 1, 1, tzinfo=UTC),
+                pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
                 source=ArticleSource.LOL_EN_US,
                 categories=["News"],
                 image_url=None,

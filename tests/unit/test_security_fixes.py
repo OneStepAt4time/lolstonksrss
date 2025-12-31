@@ -8,7 +8,7 @@ This module tests the critical security and quality fixes:
 - Input validation on category parameter
 """
 
-from datetime import UTC
+from datetime import timezone
 
 import pytest
 from fastapi import status
@@ -139,7 +139,7 @@ async def test_no_hardcoded_localhost_in_feed() -> None:
     article = Article(
         title="Test Article",
         url="https://example.com/article",
-        pub_date=datetime.now(UTC),
+        pub_date=datetime.now(timezone.utc),
         guid="test-guid",
         source=ArticleSource.LOL_EN_US,
     )
