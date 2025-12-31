@@ -467,3 +467,224 @@ async def test_openapi_schema(client: AsyncClient) -> None:
     assert schema["info"]["title"] == "LoL Stonks RSS"
     assert schema["info"]["version"] == "1.0.0"
     assert "/feed.xml" in schema["paths"]
+
+
+@pytest.mark.asyncio
+async def test_get_articles_default(client: AsyncClient, mock_repository: AsyncMock) -> None:
+    """
+    Test getting articles as JSON with default parameters.
+
+    Args:
+        client: Test client fixture
+        mock_repository: Mocked repository fixture
+    """
+    from datetime import datetime, timezone
+
+    # Setup mock articles
+    articles = [
+        Article(
+            guid="test-1",
+            title="Test Article 1",
+            url="https://example.com/1",
+            description="Test description 1",
+            pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+            source=ArticleSource.LOL_EN_US,
+            categories=["News"],
+            image_url=None,
+        ),
+        Article(
+            guid="test-2",
+            title="Test Article 2",
+            url="https://example.com/2",
+            description="Test description 2",
+            pub_date=datetime(2024, 1, 2, tzinfo=timezone.utc),
+            source=ArticleSource.LOL_IT_IT,
+            categories=["Patch"],
+            image_url=None,
+        ),
+    ]
+    mock_repository.get_latest = AsyncMock(return_value=articles)
+
+    response = await client.get("/api/articles")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 2
+    assert data[0]["title"] == "Test Article 1"
+    assert data[1]["title"] == "Test Article 2"
+
+
+@pytest.mark.asyncio
+async def test_get_articles_with_limit(client: AsyncClient, mock_repository: AsyncMock) -> None:
+    """
+    Test getting articles with custom limit.
+
+    Args:
+        client: Test client fixture
+        mock_repository: Mocked repository fixture
+    """
+    from datetime import datetime, timezone
+
+    article = Article(
+        guid="test-1",
+        title="Test Article",
+        url="https://example.com/article",
+        description="Test description",
+        pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        source=ArticleSource.LOL_EN_US,
+        categories=["News"],
+        image_url=None,
+    )
+    mock_repository.get_latest = AsyncMock(return_value=[article])
+
+    response = await client.get("/api/articles?limit=10")
+
+    assert response.status_code == 200
+    mock_repository.get_latest.assert_called_once_with(limit=10, source=None)
+
+
+@pytest.mark.asyncio
+async def test_get_articles_with_source(client: AsyncClient, mock_repository: AsyncMock) -> None:
+    """
+    Test getting articles filtered by source.
+
+    Args:
+        client: Test client fixture
+        mock_repository: Mocked repository fixture
+    """
+    from datetime import datetime, timezone
+
+    article = Article(
+        guid="test-1",
+        title="Test Article",
+        url="https://example.com/article",
+        description="Test description",
+        pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        source=ArticleSource.LOL_IT_IT,
+        categories=["News"],
+        image_url=None,
+    )
+    mock_repository.get_latest = AsyncMock(return_value=[article])
+
+    response = await client.get("/api/articles?source=it-it")
+
+    assert response.status_code == 200
+    mock_repository.get_latest.assert_called_once_with(limit=50, source="it-it")
+
+
+@pytest.mark.asyncio
+async def test_get_articles_repository_not_initialized(client: AsyncClient) -> None:
+    """
+    Test getting articles when repository is not initialized.
+
+    Args:
+        client: Test client fixture
+    """
+    # Clear app_state to simulate uninitialized repository
+    app_state.clear()
+
+    response = await client.get("/api/articles")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert "not initialized" in data["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_get_scheduler_status(client: AsyncClient) -> None:
+    """
+    Test getting scheduler status.
+
+    Args:
+        client: Test client fixture
+    """
+    # Setup mock scheduler
+    scheduler = MagicMock()
+    scheduler.get_status = MagicMock(
+        return_value={
+            "status": "running",
+            "last_update": "2024-01-01T00:00:00Z",
+            "next_update": "2024-01-01T00:05:00Z",
+            "update_count": 42,
+        }
+    )
+
+    # Store in app_state
+    app_state["scheduler"] = scheduler
+
+    response = await client.get("/admin/scheduler/status")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "running"
+    assert data["update_count"] == 42
+
+
+@pytest.mark.asyncio
+async def test_get_scheduler_status_not_initialized(client: AsyncClient) -> None:
+    """
+    Test getting scheduler status when scheduler is not initialized.
+
+    Args:
+        client: Test client fixture
+    """
+    # Clear app_state to simulate uninitialized scheduler
+    app_state.clear()
+
+    response = await client.get("/admin/scheduler/status")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert "not initialized" in data["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_trigger_scheduler_update(client: AsyncClient) -> None:
+    """
+    Test manually triggering scheduler update.
+
+    Args:
+        client: Test client fixture
+    """
+    # Setup mock scheduler with async method
+    scheduler = MagicMock()
+
+    # Create async mock function for trigger_update_now
+    async def mock_trigger():
+        return {
+            "status": "success",
+            "articles_added": 5,
+            "articles_updated": 3,
+            "duration_seconds": 2.5,
+        }
+
+    scheduler.trigger_update_now = mock_trigger
+
+    # Store in app_state
+    app_state["scheduler"] = scheduler
+
+    response = await client.post("/admin/scheduler/trigger")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["articles_added"] == 5
+
+
+@pytest.mark.asyncio
+async def test_trigger_scheduler_update_not_initialized(client: AsyncClient) -> None:
+    """
+    Test triggering scheduler update when scheduler is not initialized.
+
+    Args:
+        client: Test client fixture
+    """
+    # Clear app_state to simulate uninitialized scheduler
+    app_state.clear()
+
+    response = await client.post("/admin/scheduler/trigger")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert "not initialized" in data["detail"].lower()
