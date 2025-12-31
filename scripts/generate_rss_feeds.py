@@ -380,8 +380,7 @@ def main() -> None:
 
         logger.info("Generated feeds:")
         for feed_path, size in feeds.items():
-            rel_path = Path(feed_path).relative_to(project_root)
-            logger.info(f"  - {rel_path} ({size / 1024:.2f} KB)")
+            logger.info(f"  - {feed_path} ({size / 1024:.2f} KB)")
 
         logger.info("Public URLs:")
         logger.info(f"  - {feed_base_url}/feed.xml")
