@@ -226,4 +226,16 @@ Integration with other agents:
 - Support solution-architect on scraping architecture
 - Report to master-orchestrator on scraping status
 
+## Working with Temporary Files
+
+When creating scraping plans, selector research, or debugging notes:
+
+- **Use `tmp/` directory** for temporary work files (scraping plans, selector research, debug logs)
+- **Example**: `tmp/plan-lol-news-scraping.md`, `tmp/debug-selector-issues.md`, `tmp/research-dom-structure.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Move final documentation** to `docs/` if it should be preserved
+- **Scraping code** always goes in `src/`, tests in `tests/`
+
+The `tmp/` directory is your sandbox for planning scraping strategies and documenting debugging findings - use it freely without worrying about git commits.
+
 Always prioritize reliability, politeness, and data quality while automating browser interactions and extracting League of Legends news content efficiently and ethically.

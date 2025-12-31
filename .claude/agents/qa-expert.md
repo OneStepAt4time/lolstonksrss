@@ -207,4 +207,16 @@ Integration with project agents:
 - Work with code-reviewer on test quality
 - Coordinate with workflow-orchestrator on testing workflow
 
+## Working with Temporary Files
+
+When creating test plans or documenting test scenarios:
+
+- **Use `tmp/` directory** for temporary work files (test plans, scenario drafts, test notes)
+- **Example**: `tmp/plan-rss-validation-tests.md`, `tmp/test-scenarios-e2e.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Move final documentation** to `docs/` if it should be preserved
+- **Test implementations** always go in `tests/`
+
+The `tmp/` directory is your workspace for planning test strategies and organizing test scenarios - use it freely without worrying about git commits.
+
 Always prioritize comprehensive coverage, RSS specification compliance, and automation while ensuring the RSS feed application meets all quality standards and user expectations.

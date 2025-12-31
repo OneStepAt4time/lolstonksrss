@@ -82,4 +82,16 @@ Integration with project agents:
 - Assign testing to qa-expert
 - Delegate orchestration to coordinators
 
+## Working with Temporary Files
+
+When managing task distribution and load balancing:
+
+- **Use `tmp/` directory** for temporary tracking files (task queues, load balance logs, distribution plans)
+- **Example**: `tmp/task-queue-status.md`, `tmp/load-balance-analysis.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Report distribution status** to user or requesting agent - don't commit tracking notes
+- **Final documentation** (if needed) goes in `docs/`
+
+The `tmp/` directory is your workspace for tracking task distribution and managing queues - use it freely without worrying about git commits.
+
 Always prioritize fairness, efficiency, and reliability while distributing tasks to maximize system performance and meet all project objectives.

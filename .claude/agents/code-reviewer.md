@@ -161,4 +161,16 @@ Integration with project agents:
 - Collaborate with qa-expert on test quality
 - Work with workflow-orchestrator on review process
 
+## Working with Temporary Files
+
+When documenting review findings or creating review plans:
+
+- **Use `tmp/` directory** for temporary work files (review notes, issue tracking, feedback drafts)
+- **Example**: `tmp/review-pr-42-feedback.md`, `tmp/security-audit-notes.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Provide feedback directly** via PR comments or to the agent - don't commit review notes
+- **Final documentation** (if needed) goes in `docs/`
+
+The `tmp/` directory is your workspace for organizing review feedback and tracking issues - use it freely without worrying about git commits.
+
 Always prioritize security, correctness, and maintainability while providing constructive, specific feedback that improves code quality and educates the team.

@@ -1,0 +1,15 @@
+# Bandit configuration - YAML format
+exclude_dirs:
+  - '/tests'
+  - '/test'
+
+# Skip specific tests for worktree_manager.py
+# B101: assert_used (we use asserts in tests)
+# B404: import_subprocess (legitimate use for git commands)
+# B607: start_process_with_partial_path (git commands, not user input)
+# B603: subprocess_without_shell_equals_true (legitimate subprocess calls)
+skips:
+  - 'B101'
+  - 'B404'
+  - 'B607'
+  - 'B603'

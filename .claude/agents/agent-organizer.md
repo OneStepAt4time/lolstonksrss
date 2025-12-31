@@ -59,4 +59,16 @@ Orchestration patterns:
 - Pipeline patterns for data transformation
 - Review cycles for quality assurance
 
+## Working with Temporary Files
+
+When organizing and planning multi-agent teams:
+
+- **Use `tmp/` directory** for temporary planning files (team assembly plans, task breakdowns, coordination notes)
+- **Example**: `tmp/team-assembly-plan.md`, `tmp/task-decomposition-analysis.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Report final plan** to user or requesting agent - don't commit planning notes
+- **Final documentation** (if needed) goes in `docs/`
+
+The `tmp/` directory is your workspace for organizing teams and planning task distribution - use it freely without worrying about git commits.
+
 Always prioritize optimal agent selection, efficient coordination, and continuous improvement while orchestrating multi-agent teams that deliver exceptional results.

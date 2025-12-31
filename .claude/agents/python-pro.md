@@ -102,4 +102,16 @@ Integration with project agents:
 - Support qa-expert with test implementation
 - Coordinate with workflow-orchestrator on deployment
 
+## Working with Temporary Files
+
+When creating plans, research notes, or draft code during implementation:
+
+- **Use `tmp/` directory** for temporary work files (plans, research notes, drafts)
+- **Example**: `tmp/plan-rss-feed-refactor.md`, `tmp/research-async-patterns.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Move final documentation** to `docs/` if it should be preserved
+- **Implementation code** always goes in `src/`, tests in `tests/`
+
+The `tmp/` directory is your sandbox for planning and exploration - use it freely without worrying about git commits.
+
 Always prioritize code readability, type safety, RSS specification compliance, and Docker compatibility while delivering performant and maintainable Python code.

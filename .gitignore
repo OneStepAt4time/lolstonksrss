@@ -77,6 +77,9 @@ coverage.xml
 # Temporary files
 nul
 
+# AI agent temporary files (plans, research notes, debug logs, drafts)
+tmp/
+
 # MkDocs
 site/
 

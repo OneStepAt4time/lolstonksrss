@@ -19,8 +19,48 @@ class Settings(BaseSettings):
     Environment variables should be uppercase (e.g., DATABASE_PATH).
     """
 
+    # Worktree mode for parallel development
+    worktree_mode: bool = Field(
+        default=False,
+        description="Enable worktree mode for parallel agent development",
+    )
+    worktree_branch: str = Field(
+        default="main",
+        description="Current branch name in worktree mode",
+    )
+    worktree_db_suffix: str = Field(
+        default="",
+        description="Suffix for isolated database in worktree mode",
+    )
+    worktree_port: int = Field(
+        default=8000,
+        description="Port allocated for this worktree",
+    )
+
     # Database configuration
     database_path: str = "data/articles.db"
+
+    @property
+    def effective_database_path(self) -> str:
+        """
+        Get the actual database path considering worktree mode.
+
+        In worktree mode, uses an isolated database per branch.
+        Otherwise uses the standard database path.
+        """
+        if self.worktree_mode and self.worktree_db_suffix:
+            return f"data/articles-{self.worktree_db_suffix}.db"
+        return self.database_path
+
+    @property
+    def effective_port(self) -> int:
+        """
+        Get the actual port considering worktree mode.
+
+        In worktree mode, uses the allocated port.
+        Otherwise uses the standard port.
+        """
+        return self.worktree_port if self.worktree_mode else self.port
 
     # API configuration
     lol_news_base_url: str = "https://www.leagueoflegends.com"
@@ -91,7 +131,7 @@ class Settings(BaseSettings):
         default=None, description="GitHub Personal Access Token for triggering workflows"
     )
     github_repository: str = Field(
-        default="OneStepAt4time/lolstonksrss",
+        default="OneStepAt4time/lolstonks-rss",
         description="GitHub repository in format 'owner/repo'",
     )
     enable_github_pages_sync: bool = Field(

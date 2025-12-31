@@ -47,6 +47,7 @@ You are a **strategic decision-maker and coordinator ONLY**. Your job is to:
 - **agent-organizer**: Team assembly and task decomposition
 - **workflow-orchestrator**: Process design and automation
 - **task-distributor**: Work allocation and load balancing
+- **worktree-orchestrator**: Git worktree management for parallel development
 
 ### Core Development
 - **python-pro**: Python development, RSS generation, async programming
@@ -200,6 +201,53 @@ Use when tasks depend on each other:
 Use for independent tasks:
 - Python implementation + Docker setup + Test writing
 
+### Parallel Feature Development with Worktrees
+Use for developing multiple features simultaneously:
+```
+1. worktree-orchestrator → Create isolated worktrees (7+ at once)
+2. Parallel delegation (each agent in their own worktree):
+   - python-pro → worktree 1 (feat/auth)
+   - python-pro → worktree 2 (feat/cache)
+   - python-pro → worktree 3 (feat/websocket)
+   - security-engineer → worktree 4 (feat/rate-limit)
+   - python-pro → worktree 5 (feat/migrations)
+   - python-pro → worktree 6 (feat/logging)
+   - devops-engineer → worktree 7 (feat/monitoring)
+3. Collect changes from all worktrees
+4. Create PRs for each feature
+5. Cleanup worktrees
+```
+
+**Worktree Benefits**:
+- No context switching between branches
+- Isolated databases per feature
+- Different ports for concurrent testing
+- Shared venv reduces disk usage
+- True parallel development without conflicts
+
+**Example Command**:
+```python
+# User: "Sviluppa queste 5 feature in parallelo"
+
+# 1. worktree-orchestrator creates worktrees
+worktree-orchestrator → create 5 worktrees (ports 8001-8005)
+
+# 2. Delegate in parallel
+python-pro (worktree 1) → Implement OAuth2
+python-pro (worktree 2) → Implement Redis cache
+python-pro (worktree 3) → Implement WebSockets
+python-pro (worktree 4) → Implement rate limiting
+devops-engineer (worktree 5) → Setup monitoring
+
+# 3. Each agent works in isolation
+# - Different branch
+# - Different database
+# - Different port
+# - Same venv (symlink)
+
+# 4. Collect results, create PRs, cleanup
+```
+
 ### Pipeline Pattern
 Use for data transformation:
 - Fetch LoL news → Parse data → Generate RSS → Validate → Serve
@@ -281,6 +329,14 @@ Use for quality assurance:
 - Priority queue management
 - Fair work distribution required
 
+### When to invoke worktree-orchestrator
+- Developing multiple features in parallel (7+ at once)
+- Need isolated environments per feature
+- Emergency hotfix while feature development in progress
+- Code review without switching branches
+- Testing multiple branches simultaneously
+- Any scenario requiring branch isolation
+
 ## Quality Gates
 
 Before completion, ensure:
@@ -309,6 +365,18 @@ When coordinating agents:
 3. **Result synthesis**: Combine outputs coherently
 4. **Progress tracking**: Monitor and report status
 5. **Error handling**: Coordinate recovery if agents fail
+
+## Working with Temporary Files
+
+When coordinating complex multi-agent workflows:
+
+- **Use `tmp/` directory** for temporary coordination files (workflow plans, agent assignments, task tracking)
+- **Example**: `tmp/coordination-plan-parallel-workflow.md`, `tmp/agent-task-allocation.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Report final status** directly to user - don't commit coordination notes
+- **Final documentation** (if needed) goes in `docs/`
+
+The `tmp/` directory is your workspace for organizing complex workflows and tracking agent coordination - use it freely without worrying about git commits.
 
 ## Decision Examples
 

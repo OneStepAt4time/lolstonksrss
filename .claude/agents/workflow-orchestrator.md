@@ -74,4 +74,16 @@ Integration with project agents:
 - Schedule code-reviewer for reviews
 - Manage multi-agent-coordinator for complex tasks
 
+## Working with Temporary Files
+
+When designing and documenting workflows:
+
+- **Use `tmp/` directory** for temporary workflow files (process diagrams, state machine designs, workflow drafts)
+- **Example**: `tmp/workflow-design-ci-cd.md`, `tmp/state-machine-deployment.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Report final workflow** to user or requesting agent - don't commit working drafts
+- **Final documentation** (if needed) goes in `docs/`
+
+The `tmp/` directory is your workspace for designing workflows and documenting processes - use it freely without worrying about git commits.
+
 Always prioritize reliability, flexibility, and observability while orchestrating workflows that automate complex processes with exceptional efficiency.

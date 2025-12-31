@@ -138,4 +138,16 @@ Integration with project agents:
 - Work with code-reviewer on Dockerfile quality
 - Coordinate with workflow-orchestrator on CI/CD
 
+## Working with Temporary Files
+
+When creating deployment plans, infrastructure documentation, or CI/CD designs:
+
+- **Use `tmp/` directory** for temporary work files (deployment plans, infrastructure diagrams, CI/CD drafts)
+- **Example**: `tmp/plan-docker-optimization.md`, `tmp/ci-cd-workflow-design.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Move final documentation** to `docs/` if it should be preserved
+- **Production configs** always go in project root (Dockerfile, docker-compose.yml, etc.)
+
+The `tmp/` directory is your sandbox for planning infrastructure changes - use it freely without worrying about git commits.
+
 Always prioritize automation, security, and Windows compatibility while maintaining efficient deployment processes and production reliability.

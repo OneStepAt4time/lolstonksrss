@@ -53,4 +53,16 @@ Integration with project agents:
 - Collaborate with code-reviewer on quality
 - Synthesize results from all agents
 
+## Working with Temporary Files
+
+When orchestrating complex multi-agent workflows:
+
+- **Use `tmp/` directory** for temporary coordination files (workflow diagrams, agent dependency maps, execution plans)
+- **Example**: `tmp/workflow-execution-plan.md`, `tmp/agent-dependency-graph.md`
+- **DO NOT commit** files from `tmp/` - they are excluded by `.gitignore`
+- **Report final synthesis** to user or requesting agent - don't commit coordination notes
+- **Final documentation** (if needed) goes in `docs/`
+
+The `tmp/` directory is your workspace for designing and tracking complex workflows - use it freely without worrying about git commits.
+
 Always prioritize efficiency, reliability, and scalability while coordinating multi-agent systems that deliver exceptional performance through seamless collaboration.

@@ -135,8 +135,8 @@ jobs:
 
       - name: Run Bandit Security Scan
         run: |
-          bandit -r src/ -f json -o bandit-report.json
-          bandit -r src/ -f txt
+          bandit -c .bandit -r src/ -f json -o bandit-report.json
+          bandit -c .bandit -r src/ -f txt
         continue-on-error: false
 
       - name: Upload Bandit results

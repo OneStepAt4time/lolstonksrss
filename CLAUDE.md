@@ -109,6 +109,77 @@ pytest tests/test_specific.py
 
 ---
 
+## 📁 Temporary File Management
+
+### The `tmp/` Directory
+
+Use the `tmp/` directory for **temporary AI-generated files** that should NOT be committed to the repository. This directory is excluded from git via `.gitignore`.
+
+#### What to Put in `tmp/`
+
+**DO put in `tmp/`:**
+- Implementation plans and design notes
+- Research notes and exploratory analysis
+- Debug logs and troubleshooting notes
+- Draft code snippets or experiments
+- Temporary test outputs
+- Agent coordination notes
+- Any file that is part of your working process, not the final deliverable
+
+**DO NOT put in `tmp/`:**
+- Production code (should go in `src/`)
+- Tests (should go in `tests/`)
+- Documentation (should go in `docs/`)
+- Configuration files (should go in project root)
+
+#### Examples of `tmp/` Usage
+
+```bash
+tmp/
+├── plan-oauth-implementation.md       # Temporary implementation plan
+├── research-api-designs.md            # Research notes during exploration
+├── debug-cache-issue.md               # Debugging notes
+├── draft-rate-limiter.py              # Draft code being developed
+└── agent-task-notes.md                # Notes during agent coordination
+```
+
+#### Workflow: From `tmp/` to Repository
+
+1. **Create plan/research in `tmp/`** - Work through your implementation plan
+2. **Implement based on plan** - Write actual code/tests in proper locations
+3. **Move relevant documentation** - If `tmp/` content should be preserved, move to `docs/`
+4. **Leave `tmp/` uncommitted** - The working files stay in `tmp/`, never committed
+
+```bash
+# Example workflow
+echo "# Plan: OAuth2 Implementation" > tmp/plan-oauth.md
+# Edit plan, add details...
+# Implement the feature in src/
+# Move final docs if needed: mv tmp/plan-oauth.md docs/oauth-plan.md
+# Or just leave in tmp/ - it won't be committed anyway
+```
+
+#### Why This Matters
+
+- **Clean repository history**: Only final, reviewed content is committed
+- **Safe experimentation**: `tmp/` is a sandbox for ideas
+- **Reduced noise**: No endless drafts in commit history
+- **Better collaboration**: Team sees polished deliverables, not working drafts
+
+#### Special Case: Plan Mode
+
+When Claude Code enters **plan mode**, it automatically saves plans to a special location (managed by the system). You can also manually save working plans to `tmp/` for reference during implementation.
+
+#### Cleanup
+
+The `tmp/` directory can be cleaned periodically:
+```bash
+# Occasionally clean old tmp files (safe, they're not in git)
+rm -rf tmp/*.md
+```
+
+---
+
 ## 📋 GITFLOW: Detailed Workflow (MANDATORY)
 
 ### Step-by-Step Process
