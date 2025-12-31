@@ -1,0 +1,219 @@
+name: Parallel Development Tests
+
+on:
+  # Test parallel worktree functionality
+  workflow_dispatch:
+    inputs:
+      branch_count:
+        description: 'Number of feature branches to test in parallel'
+        required: true
+        default: '7'
+        type: choice
+        options:
+          - '3'
+          - '5'
+          - '7'
+          - '10'
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'quick'
+        type: choice
+        options:
+          - 'quick'
+          - 'full'
+      create_prs:
+        description: 'Create test PRs after completion'
+        required: false
+        default: false
+        type: boolean
+
+  # Also test on push to develop
+  push:
+    branches:
+      - develop
+    paths:
+      - 'src/worktree_manager.py'
+      - '.github/workflows/parallel-development.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  setup-and-test:
+    name: Test ${{ matrix.branch_index }} worktrees
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        branch_index: [1, 2, 3, 4, 5, 6, 7]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install UV package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: |
+          uv sync
+
+      - name: Create worktree for branch ${{ matrix.branch_index }}
+        run: |
+          BRANCH_NAME="feature/parallel-test-${{ matrix.branch_index }}"
+          echo "Creating worktree for branch: $BRANCH_NAME"
+
+          # Create new branch and worktree
+          git worktree add ../wt-${{ matrix.branch_index }} -b $BRANCH_NAME
+
+          # Verify worktree was created
+          cd ../wt-${{ matrix.branch_index }}
+          echo "Current branch: $(git branch --show-current)"
+          echo "Worktree path: $(pwd)"
+
+      - name: Set worktree environment
+        run: |
+          BRANCH_NAME="feature/parallel-test-${{ matrix.branch_index }}"
+          DB_SUFFIX="feature-parallel-test-${{ matrix.branch_INDEX }}"
+          PORT=$((8000 + ${{ matrix.branch_index }}))
+
+          echo "WORKTREE_MODE=1" >> $GITHUB_ENV
+          echo "WORKTREE_BRANCH=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "WORKTREE_DB_SUFFIX=$DB_SUFFIX" >> $GITHUB_ENV
+          echo "WORKTREE_PORT=$PORT" >> $GITHUB_ENV
+
+          echo "Worktree configuration:"
+          echo "  Branch: $BRANCH_NAME"
+          echo "  DB: articles-$DB_SUFFIX.db"
+          echo "  Port: $PORT"
+
+      - name: Make test change in worktree
+        run: |
+          cd ../wt-${{ matrix.branch_index }}
+
+          # Create a simple test file
+          mkdir -p tests/worktree
+          cat > tests/worktree/test_${{ matrix.branch_index }}.py << 'EOF'
+          """Test for worktree ${{ matrix.branch_index }}"""
+          import pytest
+
+          def test_worktree_${{ matrix.branch_index }}():
+              """Test that worktree ${{ matrix.branch_index }} is functional"""
+              assert True
+
+          def test_isolated_db():
+              """Test database isolation"""
+              import os
+              db_suffix = os.getenv("WORKTREE_DB_SUFFIX", "")
+              assert "parallel-test-${{ matrix.branch_index }}" in db_suffix
+          EOF
+
+      - name: Run tests in worktree
+        working-directory: ../wt-${{ matrix.branch_index }}
+        run: |
+          # Quick tests
+          if [ "${{ inputs.test_type }}" = "quick" ]; then
+            echo "Running quick tests..."
+            uv run pytest tests/worktree/test_${{ matrix.branch_index }}.py -v
+          else
+            echo "Running full test suite..."
+            uv run pytest tests/ -v --cov=src
+          fi
+
+      - name: Run worktree manager tests
+        working-directory: ../wt-${{ matrix.branch_index }}
+        run: |
+          # Test worktree manager functionality
+          uv run python -c "
+          from src.worktree_manager import WorktreeManager
+          wm = WorktreeManager()
+          print(f'Available capacity: {wm.get_available_capacity()}')
+          print(f'Current branch: {wm.get_current_branch()}')
+          print(f'Is worktree: {wm.is_worktree()}')
+          "
+
+      - name: Commit changes in worktree
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          cd ../wt-${{ matrix.branch_index }}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add tests/worktree/test_${{ matrix.branch_index }}.py
+          git commit -m "test(worktree): add test for parallel worktree ${{ matrix.branch_index }}"
+          git push origin feature/parallel-test-${{ matrix.branch_index }}
+
+      - name: Create PR for worktree
+        if: github.event_name == 'workflow_dispatch' && inputs.create_prs == true
+        run: |
+          gh pr create \
+            --title "Test PR ${{ matrix.branch_index }}: Parallel worktree test" \
+            --body "Automated test PR for parallel worktree functionality." \
+            --base develop \
+            --head feature/parallel-test-${{ matrix.branch_index }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup worktree
+        if: always()
+        run: |
+          cd ../lolstonksrss
+          git worktree remove ../wt-${{ matrix.branch_index }} || true
+          git worktree prune || echo "Prune completed"
+
+  # Summary job
+  summary:
+    name: Test Summary
+    needs: setup-and-test
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "Parallel worktree testing completed!"
+          echo "Matrix size: ${{ needs.setup-and-test.strategy.matrix.branch_index }}"
+
+          # Check if any jobs failed
+          if [ "${{ needs.setup-and-test.result }}" != "success" ]; then
+            echo "⚠️ Some worktree tests failed"
+            exit 1
+          else
+            echo "✓ All worktree tests passed!"
+          fi
+
+      - name: List remaining worktrees
+        run: |
+          git worktree list || echo "No worktrees remaining"
+
+      - name: Cleanup any remaining worktrees
+        if: always()
+        run: |
+          git worktree list | grep -v "lolstonksrss$" | awk '{print $1}' | xargs -I {} git worktree remove {} || true
+          git worktree prune || true

@@ -452,6 +452,282 @@ git push origin --delete hotfix/1.1.1-critical-bug
 - [ ] Merged back to develop
 - [ ] Issue closed
 
+## Parallel Development with Worktrees
+
+### Overview
+
+Git worktrees allow multiple branches to be checked out simultaneously in different directories. This enables true parallel development without context switching, making it ideal for:
+
+- Developing multiple features simultaneously (7+ at once)
+- Emergency hotfixes while feature work is in progress
+- Code review without switching branches
+- Testing multiple branches at the same time
+- Isolated testing environments per feature
+
+### Worktree Architecture
+
+```
+lolstonksrss/              (main repo - port 8000)
+├── .venv/                  (shared venv)
+├── data/articles.db        (main DB)
+└── src/
+lolstonksrss-feature-a/     (worktree 1 - port 8001)
+├── .venv → ../lolstonksrss/.venv  (symlink)
+├── data/articles-feature-a.db      (isolated DB)
+└── src/
+lolstonksrss-feature-b/     (worktree 2 - port 8002)
+├── .venv → ../lolstonksrss/.venv  (symlink)
+├── data/articles-feature-b.db      (isolated DB)
+└── src/
+```
+
+### Key Benefits
+
+1. **No Context Switching**: Each branch stays open in its own directory
+2. **Isolated Databases**: Each worktree uses its own SQLite database file
+3. **Different Ports**: Each worktree runs on a different port (8001-8999)
+4. **Shared Venv**: Symlink to main venv saves disk space and installation time
+5. **True Parallelism**: Multiple agents can work simultaneously without conflicts
+
+### Creating Worktrees for Parallel Development
+
+#### Manual Creation
+
+```bash
+# Single worktree
+git worktree add ../lolstonksrss-feature-x feature/x
+
+# Multiple worktrees
+for i in {1..7}; do
+    git worktree add ../lolstonksrss-agent-$i -b feature/agent-$i-task
+done
+```
+
+#### Using the Worktree Manager CLI
+
+```bash
+# Create single worktree
+uv run python scripts/worktree-manager.py create feature/oauth2
+
+# Create 7 worktrees for parallel agent development
+uv run python scripts/worktree-manager.py create-multi --count 7
+
+# List all worktrees
+uv run python scripts/worktree-manager.py list
+
+# Cleanup specific worktree
+uv run python scripts/worktree-manager.py cleanup feature/oauth2
+
+# Cleanup all worktrees
+uv run python scripts/worktree-manager.py cleanup-all
+
+# Show system status
+uv run python scripts/worktree-manager.py status
+```
+
+### Parallel Feature Development Workflow
+
+#### Example: 7 Features in Parallel
+
+```bash
+# 1. Create worktrees
+cd D:\lolstonksrss
+uv run python scripts/worktree-manager.py create-multi --count 7
+
+# Output:
+# ✓ Created 7 worktrees successfully!
+#   • feature/agent-1-task: ../lolstonksrss-feature-agent-1-task (port 8001)
+#   • feature/agent-2-task: ../lolstonksrss-feature-agent-2-task (port 8002)
+#   • feature/agent-3-task: ../lolstonksrss-feature-agent-3-task (port 8003)
+#   • feature/agent-4-task: ../lolstonksrss-feature-agent-4-task (port 8004)
+#   • feature/agent-5-task: ../lolstonksrss-feature-agent-5-task (port 8005)
+#   • feature/agent-6-task: ../lolstonksrss-feature-agent-6-task (port 8006)
+#   • feature/agent-7-task: ../lolstonksrss-feature-agent-7-task (port 8007)
+
+# 2. Work in parallel - each worktree is isolated
+cd ../lolstonksrss-feature-agent-1-task
+# Feature 1 development (uses articles-feature-agent-1-task.db, port 8001)
+
+cd ../lolstonksrss-feature-agent-2-task
+# Feature 2 development (uses articles-feature-agent-2-task.db, port 8002)
+
+# ... and so on for all 7 features
+
+# 3. Each worktree creates its own PR
+gh pr create --base develop --head feature/agent-1-task --title "feat: implement agent 1 task"
+
+# 4. After PR merge, cleanup
+cd D:\lolstonksrss
+uv run python scripts/worktree-manager.py cleanup-all
+```
+
+### Emergency Hotfix with Worktrees
+
+When a critical bug appears while you're working on a feature:
+
+```bash
+# Main worktree has uncommitted feature work
+# (no need to stash or commit)
+
+# Create separate worktree for hotfix
+git worktree add ../lolstonksrss-hotfix -b hotfix/critical-bug
+
+# Fix the bug in isolated environment
+cd ../lolstonksrss-hotfix
+# Make fix, test, commit, push, create PR
+
+# Merge hotfix PR
+# Continue feature work in main worktree - context intact!
+cd ../lolstonksrss
+
+# Cleanup hotfix worktree
+git worktree remove ../lolstonksrss-hotfix
+```
+
+### Worktree Management Best Practices
+
+#### Naming Conventions
+
+```
+../lolstonksrss-feature-description     (feature branches)
+../lolstonksrss-fix-bug-description     (bug fixes)
+../lolstonksrss-hotfix-urgent-fix        (hotfixes)
+../lolstonksrss-review-pr-123            (PR reviews)
+../lolstonksrss-experiment-new-arch     (experiments)
+```
+
+#### Port Allocation
+
+The WorktreeManager automatically allocates ports from the 8001-8999 range:
+
+- Port 8000: Main repository
+- Ports 8001-8999: Worktrees (99 possible worktrees)
+- Registry stored in: `data/worktree-ports.json`
+
+#### Database Isolation
+
+Each worktree uses an isolated database:
+
+```
+Main repo:      data/articles.db
+Feature branch: data/articles-feature-description.db
+Hotfix:         data/articles-hotfix-urgent-fix.db
+```
+
+#### Virtual Environment Sharing
+
+Worktrees automatically symlink to the main venv:
+
+```bash
+# Automatically created by WorktreeManager
+lolstonksrss-feature-x/.venv → ../lolstonksrss/.venv
+```
+
+### CI/CD Integration
+
+The `.github/workflows/parallel-development.yml` workflow tests parallel worktree functionality:
+
+```bash
+# Manual trigger
+gh workflow run parallel-development.yml -f branch_count=7
+
+# Tests:
+# - Creates 7 worktrees
+# - Runs tests in each worktree
+# - Verifies database isolation
+# - Cleans up worktrees
+```
+
+### Worktree Commands Reference
+
+```bash
+# List worktrees
+git worktree list
+
+# Create worktree (new branch)
+git worktree add ../path -b feature/name
+
+# Create worktree (existing branch)
+git worktree add ../path existing-branch
+
+# Remove worktree (clean)
+git worktree remove ../path
+
+# Remove worktree (force, discards changes)
+git worktree remove --force ../path
+
+# Move/rename worktree
+git worktree move ../old-path ../new-path
+
+# Prune stale metadata
+git worktree prune
+
+# Lock/unlock (for network drives)
+git worktree lock ../path
+git worktree unlock ../path
+```
+
+### Troubleshooting Worktrees
+
+#### Problem: Worktree with uncommitted changes
+
+```bash
+# Solution 1: Commit changes
+cd ../worktree-path
+git add .
+git commit -m "WIP: save work"
+
+# Solution 2: Force remove (discards changes)
+git worktree remove --force ../worktree-path
+```
+
+#### Problem: Port already allocated
+
+```bash
+# Solution: Release port and re-allocate
+uv run python scripts/worktree-manager.py release feature/x
+uv run python scripts/worktree-manager.py allocate feature/x
+```
+
+#### Problem: Venv symlink broken
+
+```bash
+# Solution: Recreate symlink
+powershell.exe -ExecutionPolicy Bypass -File scripts/setup-worktree-venv.ps1 ../worktree-path
+```
+
+#### Problem: Worktree metadata corrupted
+
+```bash
+# Solution: Prune and recreate
+git worktree prune
+git worktree list
+# Remove corrupted worktrees if needed
+```
+
+### Worktree Cleanup Strategy
+
+After features are merged:
+
+```bash
+# 1. Checkout main or develop
+git checkout develop
+
+# 2. List worktrees
+uv run python scripts/worktree-manager.py list
+
+# 3. Remove merged worktrees
+for wt in $(git worktree list | grep -v "lolstonksrss$" | awk '{print $1}'); do
+    git worktree remove "$wt"
+done
+
+# 4. Prune metadata
+git worktree prune
+
+# 5. Verify cleanup
+git worktree list
+```
+
 ## Quality Gates
 
 All code must pass these quality gates before merging:

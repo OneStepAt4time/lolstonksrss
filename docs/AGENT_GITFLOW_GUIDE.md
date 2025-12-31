@@ -232,6 +232,121 @@ gh pr create --title "feat: GitHub Pages auto-sync integration" --body "..."
 
 ---
 
+### Scenario 7: Parallel Feature Development with Worktrees
+
+When developing **7+ features in parallel**, use git worktrees for isolation:
+
+**Coordinator** (master-orchestrator + worktree-orchestrator):
+```python
+# 1. Create 7 worktrees for parallel development
+from src.worktree_manager import WorktreeManager
+
+wm = WorktreeManager()
+features = [
+    ("feature/oauth2", "python-pro"),
+    ("feature/redis-cache", "python-pro"),
+    ("feature/websocket-notifications", "python-pro"),
+    ("feature/rate-limiting", "security-engineer"),
+    ("feature/database-migrations", "python-pro"),
+    ("feature/enhanced-logging", "python-pro"),
+    ("feature/performance-monitoring", "devops-engineer"),
+]
+
+worktrees = []
+for feature_name, agent_type in features:
+    info = wm.create_worktree(feature_name)
+    worktrees.append((info, agent_type))
+    print(f"Created {info.path} (port {info.port})")
+
+# 2. Delegate to agents in parallel (each in its own worktree)
+# Use Task tool with subagent_type parameter
+for info, agent_type in worktrees:
+    Task(
+        subagent_type=agent_type,
+        prompt=f"""
+        Develop feature '{info.branch}' in worktree: {info.path}
+
+        Worktree configuration:
+        - Branch: {info.branch}
+        - Port: {info.port}
+        - Database: data/articles-{info.db_suffix}.db (isolated)
+        - Venv: shared symlink to main venv
+
+        GitFlow requirements:
+        1. All changes committed to {info.branch} branch
+        2. Conventional Commits format required
+        3. Run tests with isolated database
+        4. Push {info.branch} to origin when complete
+        5. NEVER push to master
+
+        Your task: Implement the feature for {info.branch}
+        """
+    )
+
+# 3. Wait for all agents to complete
+# 4. Create PRs for each feature
+for info, _ in worktrees:
+    subprocess.run([
+        "gh", "pr", "create",
+        "--base", "develop",
+        "--head", info.branch,
+        "--title", f"feat: {info.branch}"
+    ])
+
+# 5. Wait for CI/CD checks
+# 6. Cleanup worktrees after PR merge
+for info, _ in worktrees:
+    wm.cleanup_worktree(info.branch)
+```
+
+**Individual Agent** (working in a worktree):
+```python
+# 1. Detect worktree environment
+import subprocess
+from pathlib import Path
+
+branch = subprocess.check_output(['git', 'branch', '--show-current']).decode().strip()
+is_worktree = Path.cwd().name.startswith('lolstonksrss-')
+
+# 2. Configure for worktree mode
+import os
+from src.config import Settings
+
+if is_worktree:
+    settings = Settings(
+        worktree_mode=True,
+        worktree_branch=branch,
+        worktree_db_suffix=branch.replace('/', '-'),
+        worktree_port=int(os.getenv('WORKTREE_PORT', '8000'))
+    )
+
+# 3. Work in isolation
+# - All git commands use current worktree branch
+# - Tests use isolated database
+# - Server uses allocated port (if applicable)
+
+# 4. Commit and push
+git add .
+git commit -m "feat({feature_scope}): implement {feature_name}"
+git push origin {branch}
+```
+
+**Key Points for Parallel Development**:
+- **7+ features** developed simultaneously
+- **Each worktree** has isolated database and port
+- **Shared venv** via symlink (saves disk space)
+- **No conflicts** between features
+- **True parallelism** - no context switching
+- **Automatic cleanup** after PR merge
+
+**Benefits**:
+- Massive throughput improvement (7x parallel development)
+- Zero context switching overhead
+- Emergency hotfix doesn't disrupt feature work
+- Perfect for agent coordination
+
+---
+
 ## ⚠️ Common Mistakes and Fixes
 
 ### Mistake #1: Committed to Master by Accident
