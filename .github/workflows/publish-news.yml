@@ -154,18 +154,17 @@ jobs:
           cp news.html _site/index.html
 
           # Create a simple redirect page for news.html
-          cat > _site/news.html << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="refresh" content="0; url=/lolstonksrss/">
-  <script>window.location.href = '/lolstonksrss/';</script>
-</head>
-<body>
-  Redirecting to <a href="/lolstonksrss/">/lolstonksrss/</a>...
-</body>
-</html>
-EOF
+          printf '%s\n' \
+            '<!DOCTYPE html>' \
+            '<html>' \
+            '<head>' \
+            '  <meta http-equiv="refresh" content="0; url=/lolstonksrss/">' \
+            '  <script>window.location.href = "/lolstonksrss/";</script>' \
+            '</head>' \
+            '<body>' \
+            '  Redirecting to <a href="/lolstonksrss/">/lolstonksrss/</a>...' \
+            '</body>' \
+            '</html>' > _site/news.html
 
           # Copy any static assets if they exist
           if [ -d "static" ]; then
