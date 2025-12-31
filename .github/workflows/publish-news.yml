@@ -154,7 +154,18 @@ jobs:
           cp news.html _site/index.html
 
           # Create a simple redirect page for news.html
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=index.html"></head><body>Redirecting...</body></html>' > _site/news.html
+          cat > _site/news.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0; url=/lolstonksrss/">
+  <script>window.location.href = '/lolstonksrss/';</script>
+</head>
+<body>
+  Redirecting to <a href="/lolstonksrss/">/lolstonksrss/</a>...
+</body>
+</html>
+EOF
 
           # Copy any static assets if they exist
           if [ -d "static" ]; then
