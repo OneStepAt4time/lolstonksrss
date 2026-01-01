@@ -145,7 +145,7 @@ class RSSFeedGenerator:
                 fe.category(term=category)
 
         # Add source as a category
-        fe.category(term=article.source.value)
+        fe.category(term=str(article.source))
 
         # Enclosure (image)
         if article.image_url:
@@ -178,7 +178,7 @@ class RSSFeedGenerator:
 
         # Update feed title to include source
         original_title = self.feed_title
-        self.feed_title = f"{original_title} - {source.value}"
+        self.feed_title = f"{original_title} - {str(source)}"
 
         try:
             feed_xml = self.generate_feed(filtered, feed_url)
@@ -213,6 +213,40 @@ class RSSFeedGenerator:
 
         try:
             feed_xml = self.generate_feed(filtered, feed_url)
+        finally:
+            # Restore original title
+            self.feed_title = original_title
+
+        return feed_xml
+
+    def generate_feed_by_source_category(
+        self, articles: list[Article], source_category: str, feed_url: str
+    ) -> str:
+        """
+        Generate RSS feed for articles already filtered by source_category.
+
+        Unlike generate_feed_by_category(), this does NOT filter articles.
+        It assumes the database already filtered by the source_category column
+        (e.g., "official_riot", "analytics", "community_hub").
+
+        This is the correct method to use when fetching articles via
+        get_latest_by_locale() with source_category parameter.
+
+        Args:
+            articles: Pre-filtered articles (by source_category)
+            source_category: Source category name for title display
+            feed_url: Self URL of the feed
+
+        Returns:
+            RSS 2.0 XML string with category-specific title
+        """
+        # Update feed title to include source category
+        # No filtering needed - database already filtered by source_category
+        original_title = self.feed_title
+        self.feed_title = f"{original_title} - {source_category}"
+
+        try:
+            feed_xml = self.generate_feed(articles, feed_url)
         finally:
             # Restore original title
             self.feed_title = original_title

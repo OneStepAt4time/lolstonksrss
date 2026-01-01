@@ -50,19 +50,17 @@ async def test_github_pages_sync_disabled_by_default(
                 url="http://test.com/1",
                 pub_date=datetime.utcnow(),
                 guid="test-1",
-                source=ArticleSource.LOL_EN_US,
+                source=ArticleSource.create("lol", "en-us"),
                 description="Test",
                 categories=["News"],
             )
         ]
 
-        with patch.object(
-            scheduler.update_service, "update_all_sources", new=AsyncMock()
-        ) as mock_update:
+        with patch.object(scheduler.update_service, "update_all", new=AsyncMock()) as mock_update:
             mock_update.return_value = {
-                "total_new": 1,
+                "new_articles": 1,
                 "total_fetched": 1,
-                "total_duplicates": 0,
+                "failed": 0,
             }
 
             # No GitHub dispatcher should be called
@@ -84,14 +82,12 @@ async def test_github_pages_sync_enabled_with_new_articles(
         mock_settings.github_token = "ghp_test_token"
         mock_settings.github_repository = "owner/repo"
 
-        # Mock update service
-        with patch.object(
-            scheduler.update_service, "update_all_sources", new=AsyncMock()
-        ) as mock_update:
+        # Mock update service (UpdateServiceV2 uses update_all)
+        with patch.object(scheduler.update_service, "update_all", new=AsyncMock()) as mock_update:
             mock_update.return_value = {
-                "total_new": 3,
+                "new_articles": 3,
                 "total_fetched": 5,
-                "total_duplicates": 2,
+                "failed": 0,
             }
 
             # Mock GitHub dispatcher
@@ -107,12 +103,12 @@ async def test_github_pages_sync_enabled_with_new_articles(
                     token="ghp_test_token", repository="owner/repo"
                 )
 
-                # Verify workflow was triggered
+                # Verify workflow was triggered (UpdateServiceV2 uses new_articles key)
                 mock_dispatcher.trigger_workflow.assert_called_once_with(
                     workflow_file="publish-news.yml",
                     inputs={
                         "triggered_by": "windows-app",
-                        "reason": "new-articles-found-3",
+                        "reason": "new-articles-found-3",  # new_articles stat from UpdateServiceV2
                     },
                 )
 
@@ -127,14 +123,12 @@ async def test_github_pages_sync_not_triggered_without_new_articles(
         mock_settings.github_token = "ghp_test_token"
         mock_settings.github_repository = "owner/repo"
 
-        with patch.object(
-            scheduler.update_service, "update_all_sources", new=AsyncMock()
-        ) as mock_update:
+        with patch.object(scheduler.update_service, "update_all", new=AsyncMock()) as mock_update:
             # No new articles
             mock_update.return_value = {
-                "total_new": 0,
+                "new_articles": 0,
                 "total_fetched": 5,
-                "total_duplicates": 5,
+                "failed": 0,
             }
 
             with patch("src.services.scheduler.GitHubWorkflowDispatcher") as mock_dispatcher_class:
@@ -158,10 +152,8 @@ async def test_github_pages_sync_warning_when_token_missing(
         mock_settings.github_token = None  # Missing token
         mock_settings.github_repository = "owner/repo"
 
-        with patch.object(
-            scheduler.update_service, "update_all_sources", new=AsyncMock()
-        ) as mock_update:
-            mock_update.return_value = {"total_new": 1, "total_fetched": 1}
+        with patch.object(scheduler.update_service, "update_all", new=AsyncMock()) as mock_update:
+            mock_update.return_value = {"new_articles": 1, "total_fetched": 1}
 
             await scheduler._update_job()
 
@@ -183,10 +175,8 @@ async def test_github_pages_sync_error_doesnt_crash_scheduler(
         mock_settings.github_token = "ghp_test_token"
         mock_settings.github_repository = "owner/repo"
 
-        with patch.object(
-            scheduler.update_service, "update_all_sources", new=AsyncMock()
-        ) as mock_update:
-            mock_update.return_value = {"total_new": 1, "total_fetched": 1}
+        with patch.object(scheduler.update_service, "update_all", new=AsyncMock()) as mock_update:
+            mock_update.return_value = {"new_articles": 1, "total_fetched": 1}
 
             # Mock dispatcher to raise exception
             with patch("src.services.scheduler.GitHubWorkflowDispatcher") as mock_dispatcher_class:
@@ -202,8 +192,8 @@ async def test_github_pages_sync_error_doesnt_crash_scheduler(
                 # Verify error logged
                 assert "Failed to trigger GitHub Pages update" in caplog.text
 
-                # Stats should still be returned
-                assert stats["total_new"] == 1
+                # Stats should still be returned (UpdateServiceV2 format)
+                assert stats["new_articles"] == 1
 
 
 @pytest.mark.asyncio
@@ -220,10 +210,8 @@ async def test_github_pages_sync_workflow_trigger_failure(
         mock_settings.github_token = "ghp_test_token"
         mock_settings.github_repository = "owner/repo"
 
-        with patch.object(
-            scheduler.update_service, "update_all_sources", new=AsyncMock()
-        ) as mock_update:
-            mock_update.return_value = {"total_new": 2, "total_fetched": 2}
+        with patch.object(scheduler.update_service, "update_all", new=AsyncMock()) as mock_update:
+            mock_update.return_value = {"new_articles": 2, "total_fetched": 2}
 
             with patch("src.services.scheduler.GitHubWorkflowDispatcher") as mock_dispatcher_class:
                 mock_dispatcher = Mock()

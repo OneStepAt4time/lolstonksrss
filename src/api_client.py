@@ -208,7 +208,7 @@ class LoLNewsAPIClient:
         pub_date = datetime.fromisoformat(pub_date_str.replace("Z", "+00:00"))
 
         # Map locale to ArticleSource
-        source = ArticleSource.LOL_EN_US if locale == "en-us" else ArticleSource.LOL_IT_IT
+        source = ArticleSource.create("lol", locale)
 
         # Extract description
         description_obj = item.get("description", {})

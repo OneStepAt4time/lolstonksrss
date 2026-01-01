@@ -95,7 +95,7 @@ class TestFetchArticles:
             url="https://example.com/article",
             pub_date=datetime(2024, 1, 15, 14, 30, 0),
             guid="test-guid-123",
-            source=ArticleSource.LOL_EN_US,
+            source=ArticleSource.create("lol", "en-us"),
             description="Test description",
             categories=["Champions", "Media"],
         )
@@ -117,7 +117,7 @@ class TestFetchArticles:
             url="https://example.com/article",
             pub_date=datetime.utcnow(),
             guid="test-guid-123",
-            source=ArticleSource.LOL_EN_US,
+            source=ArticleSource.create("lol", "en-us"),
             categories=["Champions", "Media"],
         )
 
@@ -156,7 +156,7 @@ class TestGenerateNewsPage:
                 url="https://example.com/test",
                 pub_date=datetime.utcnow(),
                 guid="test-123",
-                source=ArticleSource.LOL_EN_US,
+                source=ArticleSource.create("lol", "en-us"),
                 description="Test description",
                 categories=["Champions"],
             )
@@ -241,7 +241,7 @@ class TestGenerateNewsPage:
                 url="https://example.com/test",
                 pub_date=datetime.utcnow(),
                 guid="test-123",
-                source=ArticleSource.LOL_EN_US,
+                source=ArticleSource.create("lol", "en-us"),
                 description="Test description for article",
                 categories=["Champions", "Media"],
             )

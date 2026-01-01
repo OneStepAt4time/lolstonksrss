@@ -38,7 +38,7 @@ async def test_fetch_real_en_us_news() -> None:
         assert article.url, "Article should have a URL"
         assert article.pub_date, "Article should have a publication date"
         assert article.guid, "Article should have a GUID"
-        assert article.source == ArticleSource.LOL_EN_US
+        assert article.source == ArticleSource.create("lol", "en-us")
         assert article.author == "Riot Games"
 
     print(f"Successfully fetched {len(articles)} English articles")
@@ -61,7 +61,7 @@ async def test_fetch_real_it_it_news() -> None:
 
     # Validate all articles have Italian source
     for article in articles:
-        assert article.source == ArticleSource.LOL_IT_IT
+        assert article.source == ArticleSource.create("lol", "it-it")
 
     print(f"Successfully fetched {len(articles)} Italian articles")
 
@@ -107,8 +107,8 @@ async def test_multiple_locales() -> None:
     assert len(it_articles) > 0
 
     # Verify sources are correct
-    assert all(a.source == ArticleSource.LOL_EN_US for a in en_articles)
-    assert all(a.source == ArticleSource.LOL_IT_IT for a in it_articles)
+    assert all(a.source == ArticleSource.create("lol", "en-us") for a in en_articles)
+    assert all(a.source == ArticleSource.create("lol", "it-it") for a in it_articles)
 
     print(f"Fetched {len(en_articles)} EN articles and {len(it_articles)} IT articles")
 

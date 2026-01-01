@@ -209,7 +209,7 @@ class TestFetchNews:
                 assert len(articles) == 2
                 assert all(isinstance(a, Article) for a in articles)
                 assert articles[0].title == "Test Article 1"
-                assert articles[0].source == ArticleSource.LOL_EN_US
+                assert articles[0].source == ArticleSource.create("lol", "en-us")
                 assert articles[1].title == "Test Article 2"
 
     @pytest.mark.asyncio
@@ -273,7 +273,7 @@ class TestFetchNews:
 
                 assert len(articles) == 2
                 # All articles should have Italian source
-                assert all(a.source == ArticleSource.LOL_IT_IT for a in articles)
+                assert all(a.source == ArticleSource.create("lol", "it-it") for a in articles)
 
     @pytest.mark.asyncio
     async def test_fetch_news_http_error(self, api_client: LoLNewsAPIClient) -> None:
@@ -400,7 +400,7 @@ class TestTransformToArticle:
         assert article.title == "Test Article"
         assert article.url == "https://example.com/article"
         assert article.description == "Test description"
-        assert article.source == ArticleSource.LOL_EN_US
+        assert article.source == ArticleSource.create("lol", "en-us")
         assert article.guid == "test-guid"
         assert article.image_url == "https://example.com/image.jpg"
         assert article.categories == ["News"]
@@ -432,7 +432,7 @@ class TestTransformToArticle:
 
         article = api_client._transform_to_article(item, "it-it")
 
-        assert article.source == ArticleSource.LOL_IT_IT
+        assert article.source == ArticleSource.create("lol", "it-it")
 
     def test_transform_missing_optional_fields(self, api_client: LoLNewsAPIClient) -> None:
         """Test transforming article with missing optional fields."""
