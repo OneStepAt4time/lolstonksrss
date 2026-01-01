@@ -4,10 +4,10 @@ exclude_dirs:
   - '/test'
 
 # Skip specific tests for worktree_manager.py
-# B101: assert_used (we use asserts in tests)
-# B404: import_subprocess (legitimate use for git commands)
-# B607: start_process_with_partial_path (git commands, not user input)
-# B603: subprocess_without_shell_equals_true (legitimate subprocess calls)
+# B101 assert_used
+# B404 import_subprocess
+# B607 start_process_with_partial_path
+# B603 subprocess_without_shell_equals_true
 skips:
   - 'B101'
   - 'B404'
