@@ -18,7 +18,7 @@ def sample_article():
         url="https://example.com/test",
         pub_date=datetime(2025, 12, 28, 10, 0, 0),
         guid="test-guid",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
         description="Test description",
         content="<p>Test content</p>",
         image_url="https://example.com/image.jpg",

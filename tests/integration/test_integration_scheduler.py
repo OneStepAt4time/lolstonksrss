@@ -105,7 +105,7 @@ async def test_repository_database_operations(test_repository: ArticleRepository
         url="http://test.example.com/article",
         pub_date=datetime.utcnow(),
         guid="integration-test-1",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
         description="Test article for integration testing",
         categories=["Test"],
     )

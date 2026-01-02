@@ -10,6 +10,90 @@ from functools import lru_cache
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
+# Complete locale registry - all supported Riot locales
+RIOT_LOCALES = [
+    "en-us",  # English - United States
+    "en-gb",  # English - Great Britain
+    "es-es",  # Spanish - Spain
+    "es-mx",  # Spanish - Latin America
+    "fr-fr",  # French - France
+    "de-de",  # German - Germany
+    "it-it",  # Italian - Italy
+    "pt-br",  # Portuguese - Brazil
+    "ru-ru",  # Russian - Russia
+    "tr-tr",  # Turkish - Turkey
+    "pl-pl",  # Polish - Poland
+    "ja-jp",  # Japanese - Japan
+    "ko-kr",  # Korean - Korea
+    "zh-cn",  # Chinese - Simplified
+    "zh-tw",  # Chinese - Traditional
+    "ar-ae",  # Arabic - UAE
+    "vi-vn",  # Vietnamese - Vietnam
+    "th-th",  # Thai - Thailand
+    "id-id",  # Indonesian - Indonesia
+    "ph-ph",  # Filipino - Philippines
+]
+
+# Locale groups for batch operations and regional feeds
+LOCALE_GROUPS = {
+    "english": ["en-us", "en-gb"],
+    "spanish": ["es-es", "es-mx"],
+    "chinese": ["zh-cn", "zh-tw"],
+    "eu": ["en-gb", "fr-fr", "de-de", "it-it", "es-es", "pl-pl"],
+    "latam": ["es-mx", "pt-br"],
+    "asia": ["ja-jp", "ko-kr", "zh-cn", "zh-tw", "vi-vn", "th-th", "id-id", "ph-ph"],
+    "sea": ["vi-vn", "th-th", "id-id", "ph-ph"],
+    "all": RIOT_LOCALES,
+}
+
+# Localized feed titles
+FEED_TITLES = {
+    "en-us": "League of Legends News",
+    "en-gb": "League of Legends News",
+    "it-it": "Notizie League of Legends",
+    "es-es": "Noticias de League of Legends",
+    "es-mx": "Noticias de League of Legends",
+    "fr-fr": "Actualites League of Legends",
+    "de-de": "League of Legends Neuigkeiten",
+    "pt-br": "Noticias de League of Legends",
+    "ru-ru": "News League of Legends",
+    "tr-tr": "League of Legends Haberleri",
+    "pl-pl": "Wiadomosci League of Legends",
+    "ja-jp": "リーグ・オブ・レジェンド ニュース",
+    "ko-kr": "리그 오브 레전드 뉴스",
+    "zh-cn": "英雄联盟新闻",
+    "zh-tw": "英雄聯盟新聞",
+    "ar-ae": "أخبار ليج أوف ليجندز",
+    "vi-vn": "Tin tuc League of Legends",
+    "th-th": "ข่าว League of Legends",
+    "id-id": "Berita League of Legends",
+    "ph-ph": "Balita ng League of Legends",
+}
+
+# Localized feed descriptions
+FEED_DESCRIPTIONS = {
+    "en-us": "Latest League of Legends news and updates",
+    "en-gb": "Latest League of Legends news and updates",
+    "it-it": "Ultime notizie e aggiornamenti di League of Legends",
+    "es-es": "Las ultimas noticias y actualizaciones de League of Legends",
+    "es-mx": "Las ultimas noticias y actualizaciones de League of Legends",
+    "fr-fr": "Dernieres actualites de League of Legends",
+    "de-de": "Die neuesten League of Legends Neuigkeiten und Updates",
+    "pt-br": "Ultimas noticias e atualizacoes de League of Legends",
+    "ru-ru": "News League of Legends",
+    "tr-tr": "League of Legends haberleri ve guncellemeleri",
+    "pl-pl": "Najnowsze wiadomosci i aktualizacje League of Legends",
+    "ja-jp": "リーグ・オブ・レジェンドの最新ニュースとアップデート",
+    "ko-kr": "리그 오브 레전드 최신 뉴스 및 업데이트",
+    "zh-cn": "英雄联盟最新新闻和更新",
+    "zh-tw": "英雄聯盟最新消息與更新",
+    "ar-ae": "أحدث أخبار وتحديثات ليج أوف ليجندز",
+    "vi-vn": "Tin tuc League of Legends moi nhat",
+    "th-th": "ข่าวและอัปเดตล่าสุดของ League of Legends",
+    "id-id": "Berita dan pembaruan League of Legends terbaru",
+    "ph-ph": "Mga pinakabagong balita at update ng League of Legends",
+}
+
 
 class Settings(BaseSettings):
     """
@@ -64,7 +148,27 @@ class Settings(BaseSettings):
 
     # API configuration
     lol_news_base_url: str = "https://www.leagueoflegends.com"
-    supported_locales: list[str] | str = ["en-us", "it-it"]
+
+    # Multi-language support
+    supported_locales: list[str] | str = Field(
+        default=RIOT_LOCALES,
+        description="Supported locales for news fetching",
+    )
+
+    locale_groups: dict[str, list[str]] = Field(
+        default=LOCALE_GROUPS,
+        description="Locale groups for batch operations",
+    )
+
+    feed_titles: dict[str, str] = Field(
+        default=FEED_TITLES,
+        description="Feed titles per locale",
+    )
+
+    feed_descriptions: dict[str, str] = Field(
+        default=FEED_DESCRIPTIONS,
+        description="Feed descriptions per locale",
+    )
 
     @field_validator("supported_locales", mode="before")
     @classmethod
@@ -75,7 +179,7 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             # Split by comma and strip whitespace
             return [loc.strip() for loc in v.split(",") if loc.strip()]
-        return ["en-us", "it-it"]
+        return RIOT_LOCALES
 
     # Caching configuration (in seconds)
     cache_ttl_seconds: int = 21600  # 6 hours
@@ -87,14 +191,6 @@ class Settings(BaseSettings):
     rss_feed_link: str = "https://www.leagueoflegends.com/news"
     rss_max_items: int = 50
     feed_cache_ttl: int = 300  # 5 minutes
-
-    # Multi-language RSS feed titles
-    feed_title_en: str = "League of Legends News"
-    feed_title_it: str = "Notizie League of Legends"
-
-    # Multi-language RSS feed descriptions
-    feed_description_en: str = "Latest League of Legends news and updates"
-    feed_description_it: str = "Ultime notizie e aggiornamenti di League of Legends"
 
     # Server configuration
     base_url: str = "http://localhost:8000"
@@ -138,6 +234,33 @@ class Settings(BaseSettings):
         default=False,
         description="Enable automatic GitHub Pages update when new articles found",
     )
+
+    def get_feed_title(self, locale: str = "en-us") -> str:
+        """
+        Get localized feed title for a given locale.
+
+        Args:
+            locale: Locale code (e.g., "en-us", "it-it")
+
+        Returns:
+            Localized feed title, falling back to English if not found
+        """
+        return self.feed_titles.get(locale, self.feed_titles.get("en-us", "League of Legends News"))
+
+    def get_feed_description(self, locale: str = "en-us") -> str:
+        """
+        Get localized feed description for a given locale.
+
+        Args:
+            locale: Locale code (e.g., "en-us", "it-it")
+
+        Returns:
+            Localized feed description, falling back to English if not found
+        """
+        return self.feed_descriptions.get(
+            locale,
+            self.feed_descriptions.get("en-us", "Latest League of Legends news and updates"),
+        )
 
     class Config:
         """Pydantic configuration."""

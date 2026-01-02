@@ -141,7 +141,7 @@ async def test_no_hardcoded_localhost_in_feed() -> None:
         url="https://example.com/article",
         pub_date=datetime.now(timezone.utc),
         guid="test-guid",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
     )
 
     # Should require feed_url parameter (no default)

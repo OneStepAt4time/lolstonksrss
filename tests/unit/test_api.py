@@ -103,7 +103,7 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
                 url="https://example.com/article",
                 description="Test description",
                 pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
-                source=ArticleSource.LOL_EN_US,
+                source=ArticleSource.create("lol", "en-us"),
                 categories=["News"],
                 image_url=None,
             )
@@ -230,7 +230,7 @@ async def test_get_source_feed_en(client: AsyncClient, mock_feed_service: AsyncM
     # Verify source was passed correctly
     call_args = mock_feed_service.get_feed_by_source.call_args
     assert call_args is not None
-    assert call_args[0][0] == ArticleSource.LOL_EN_US
+    assert call_args[0][0] == ArticleSource.create("lol", "en-us")
 
 
 @pytest.mark.asyncio
@@ -250,7 +250,7 @@ async def test_get_source_feed_it(client: AsyncClient, mock_feed_service: AsyncM
     # Verify source was passed correctly
     call_args = mock_feed_service.get_feed_by_source.call_args
     assert call_args is not None
-    assert call_args[0][0] == ArticleSource.LOL_IT_IT
+    assert call_args[0][0] == ArticleSource.create("lol", "it-it")
 
 
 @pytest.mark.asyncio
@@ -488,7 +488,7 @@ async def test_get_articles_default(client: AsyncClient, mock_repository: AsyncM
             url="https://example.com/1",
             description="Test description 1",
             pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
-            source=ArticleSource.LOL_EN_US,
+            source=ArticleSource.create("lol", "en-us"),
             categories=["News"],
             image_url=None,
         ),
@@ -498,7 +498,7 @@ async def test_get_articles_default(client: AsyncClient, mock_repository: AsyncM
             url="https://example.com/2",
             description="Test description 2",
             pub_date=datetime(2024, 1, 2, tzinfo=timezone.utc),
-            source=ArticleSource.LOL_IT_IT,
+            source=ArticleSource.create("lol", "it-it"),
             categories=["Patch"],
             image_url=None,
         ),
@@ -532,7 +532,7 @@ async def test_get_articles_with_limit(client: AsyncClient, mock_repository: Asy
         url="https://example.com/article",
         description="Test description",
         pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
         categories=["News"],
         image_url=None,
     )
@@ -561,7 +561,7 @@ async def test_get_articles_with_source(client: AsyncClient, mock_repository: As
         url="https://example.com/article",
         description="Test description",
         pub_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
-        source=ArticleSource.LOL_IT_IT,
+        source=ArticleSource.create("lol", "it-it"),
         categories=["News"],
         image_url=None,
     )

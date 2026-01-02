@@ -242,19 +242,48 @@ class TestMultiLanguageSettings:
     def test_default_feed_titles(self) -> None:
         """Test default feed titles for all languages."""
         settings = Settings()
-        assert settings.feed_title_en == "League of Legends News"
-        assert settings.feed_title_it == "Notizie League of Legends"
+        # Settings now uses dict-based feed titles with locale keys
+        assert "en-us" in settings.feed_titles
+        assert "it-it" in settings.feed_titles
+        assert settings.feed_titles["en-us"] == "League of Legends News"
+        assert settings.feed_titles["it-it"] == "Notizie League of Legends"
 
     def test_default_feed_descriptions(self) -> None:
         """Test default feed descriptions for all languages."""
         settings = Settings()
-        assert "Latest League of Legends news" in settings.feed_description_en
-        assert "Ultime notizie" in settings.feed_description_it
+        # Settings now uses dict-based feed descriptions with locale keys
+        assert "en-us" in settings.feed_descriptions
+        assert "it-it" in settings.feed_descriptions
+        assert "Latest League of Legends news" in settings.feed_descriptions["en-us"]
+        assert "Ultime notizie" in settings.feed_descriptions["it-it"]
 
     def test_default_supported_locales(self) -> None:
-        """Test default supported locales."""
+        """Test default supported locales - all 20 Riot locales."""
         settings = Settings()
-        assert settings.supported_locales == ["en-us", "it-it"]
+        # After Bug #2 fix, defaults to all 20 RIOT_LOCALES
+        expected_locales = [
+            "en-us",
+            "en-gb",
+            "es-es",
+            "es-mx",
+            "fr-fr",
+            "de-de",
+            "it-it",
+            "pt-br",
+            "ru-ru",
+            "tr-tr",
+            "pl-pl",
+            "ja-jp",
+            "ko-kr",
+            "zh-cn",
+            "zh-tw",
+            "ar-ae",
+            "vi-vn",
+            "th-th",
+            "id-id",
+            "ph-ph",
+        ]
+        assert settings.supported_locales == expected_locales
 
 
 class TestServerSettings:

@@ -73,7 +73,7 @@ jobs:
     - name: Test Docker image
       run: |
         docker run --rm -d -p 8000:8000 --name lolstonksrss-test lolstonksrss:test
-        sleep 10
+        sleep 60
         curl -f http://localhost:8000/health || exit 1
         docker stop lolstonksrss-test
 

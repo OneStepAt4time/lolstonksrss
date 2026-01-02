@@ -15,7 +15,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from src.config import get_settings
 from src.database import ArticleRepository
 from src.integrations.github_dispatcher import GitHubWorkflowDispatcher
-from src.services.update_service import UpdateService
+from src.services.update_service import UpdateServiceV2
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -39,7 +39,7 @@ class NewsScheduler:
         """
         self.repository = repository
         self.interval_minutes = interval_minutes
-        self.update_service = UpdateService(repository)
+        self.update_service = UpdateServiceV2(repository)
         self.scheduler = AsyncIOScheduler()
         self.is_running = False
 
@@ -95,10 +95,10 @@ class NewsScheduler:
             Update statistics dictionary
         """
         try:
-            stats = await self.update_service.update_all_sources()
+            stats = await self.update_service.update_all()
 
             # Trigger GitHub Pages update if new articles found
-            if settings.enable_github_pages_sync and stats.get("total_new", 0) > 0:
+            if settings.enable_github_pages_sync and stats.get("new_articles", 0) > 0:
                 try:
                     if settings.github_token:
                         dispatcher = GitHubWorkflowDispatcher(
@@ -109,13 +109,13 @@ class NewsScheduler:
                             workflow_file="publish-news.yml",
                             inputs={
                                 "triggered_by": "windows-app",
-                                "reason": f"new-articles-found-{stats['total_new']}",
+                                "reason": f"new-articles-found-{stats['new_articles']}",
                             },
                         )
                         if success:
                             logger.info(
                                 "GitHub Pages update triggered",
-                                extra={"new_articles": stats["total_new"]},
+                                extra={"new_articles": stats["new_articles"]},
                             )
                     else:
                         logger.warning("GitHub Pages sync enabled but GITHUB_TOKEN not configured")

@@ -33,7 +33,9 @@ def sample_articles():
             url=f"https://example.com/article-{i}",
             pub_date=base_date - timedelta(hours=i),
             guid=f"test-guid-{i}",
-            source=ArticleSource.LOL_EN_US if i % 2 == 0 else ArticleSource.LOL_IT_IT,
+            source=ArticleSource.create("lol", "en-us")
+            if i % 2 == 0
+            else ArticleSource.create("lol", "it-it"),
             description=f"Test description {i}",
             categories=["News", "Test"] if i % 2 == 0 else ["Patch Notes"],
         )
@@ -80,7 +82,7 @@ async def test_smoke_article_save(temp_db):
         url="https://example.com/smoke",
         pub_date=datetime.utcnow(),
         guid="smoke-test-guid",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
         description="Smoke test description",
     )
     result = await temp_db.save(article)
@@ -162,10 +164,14 @@ async def test_multi_source_feed_generation(populated_db):
     feed_service = FeedService(populated_db, cache_ttl=300)
     main_feed = feedparser.parse(await feed_service.get_main_feed("http://test/feed.xml"))
     _en_feed = feedparser.parse(
-        await feed_service.get_feed_by_source(ArticleSource.LOL_EN_US, "http://test/feed/en-us.xml")
+        await feed_service.get_feed_by_source(
+            ArticleSource.create("lol", "en-us"), "http://test/feed/en-us.xml"
+        )
     )
     _it_feed = feedparser.parse(
-        await feed_service.get_feed_by_source(ArticleSource.LOL_IT_IT, "http://test/feed/it-it.xml")
+        await feed_service.get_feed_by_source(
+            ArticleSource.create("lol", "it-it"), "http://test/feed/it-it.xml"
+        )
     )
     assert len(main_feed.entries) > 0
 

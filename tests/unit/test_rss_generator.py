@@ -23,7 +23,7 @@ def sample_articles() -> list[Article]:
             url="https://www.leagueoflegends.com/news/champion-briar",
             pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
             guid="article-champion-briar",
-            source=ArticleSource.LOL_EN_US,
+            source=ArticleSource.create("lol", "en-us"),
             description="A new champion is coming to the Rift",
             content="<p>Full article content about the new champion Briar</p>",
             image_url="https://images.contentstack.io/champion.jpg",
@@ -35,7 +35,7 @@ def sample_articles() -> list[Article]:
             url="https://www.leagueoflegends.com/news/patch-14-1",
             pub_date=datetime(2025, 12, 27, 15, 30, 0, tzinfo=timezone.utc),
             guid="article-patch-14-1",
-            source=ArticleSource.LOL_EN_US,
+            source=ArticleSource.create("lol", "en-us"),
             description="Latest patch notes for Season 2025",
             categories=["Patches", "Game Updates"],
         ),
@@ -44,7 +44,7 @@ def sample_articles() -> list[Article]:
             url="https://www.leagueoflegends.com/news/arcane-season-2",
             pub_date=datetime(2025, 12, 26, 8, 0, 0, tzinfo=timezone.utc),
             guid="article-arcane-s2",
-            source=ArticleSource.LOL_IT_IT,
+            source=ArticleSource.create("lol", "it-it"),
             description="Arcane returns with a new season",
             content="<p>The Emmy-award winning series returns</p>",
             image_url="https://images.contentstack.io/arcane.jpg",
@@ -174,15 +174,15 @@ def test_generate_feed_with_categories(sample_articles: list[Article]) -> None:
     assert "Champions" in tags
     assert "News" in tags
 
-    # Source should be added as category
-    assert "lol-en-us" in tags
+    # Source should be added as category (new format: lol:en-us)
+    assert "lol:en-us" in tags
 
 
 def test_generate_feed_by_source(sample_articles: list[Article]) -> None:
     """Test filtering feed by source."""
     generator = RSSFeedGenerator()
     feed_xml = generator.generate_feed_by_source(
-        sample_articles, ArticleSource.LOL_EN_US, "http://localhost/feed/en-us.xml"
+        sample_articles, ArticleSource.create("lol", "en-us"), "http://localhost/feed/en-us.xml"
     )
 
     feed = feedparser.parse(feed_xml)
@@ -191,12 +191,12 @@ def test_generate_feed_by_source(sample_articles: list[Article]) -> None:
     assert len(feed.entries) == 2
 
     # Feed title should include source
-    assert "lol-en-us" in feed.feed.title
+    assert "lol:en-us" in feed.feed.title
 
     # Check that all entries are from EN-US
     for entry in feed.entries:
         tags = [tag["term"] for tag in entry.tags]
-        assert "lol-en-us" in tags
+        assert "lol:en-us" in tags
 
 
 def test_generate_feed_by_category(sample_articles: list[Article]) -> None:
@@ -230,7 +230,7 @@ def test_generate_feed_multiple_categories(sample_articles: list[Article]) -> No
 
     assert "Patches" in tags
     assert "Game Updates" in tags
-    assert "lol-en-us" in tags
+    assert "lol:en-us" in tags
 
 
 def test_empty_articles_list() -> None:
@@ -258,7 +258,7 @@ def test_italian_language_generator() -> None:
         url="https://www.leagueoflegends.com/it-it/news/champion-briar",
         pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="article-briar-it",
-        source=ArticleSource.LOL_IT_IT,
+        source=ArticleSource.create("lol", "it-it"),
         description="Una nuova campionessa arriva nella Landa",
         categories=["Campioni"],
     )
@@ -281,7 +281,7 @@ def test_article_without_optional_fields() -> None:
         url="https://example.com/minimal",
         pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="minimal-article",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
     )
 
     feed_xml = generator.generate_feed([article], "http://localhost/feed.xml")
@@ -303,7 +303,7 @@ def test_feed_date_format() -> None:
         url="https://example.com/test",
         pub_date=datetime(2025, 12, 28, 10, 30, 45, tzinfo=timezone.utc),
         guid="test-date",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
     )
 
     feed_xml = generator.generate_feed([article], "http://localhost/feed.xml")
@@ -332,7 +332,7 @@ def test_feed_content_html() -> None:
         url="https://example.com/html",
         pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="html-article",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
         content="<p>This is <strong>HTML</strong> content</p>",
     )
 
@@ -376,7 +376,7 @@ def test_timezone_aware_dates() -> None:
         url="https://example.com/naive",
         pub_date=datetime(2025, 12, 28, 10, 0, 0),  # No timezone
         guid="naive-date",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
     )
 
     # Should not raise error
@@ -394,13 +394,13 @@ def test_generate_feed_preserves_title() -> None:
         url="https://example.com/test",
         pub_date=datetime(2025, 12, 28, 10, 0, 0, tzinfo=timezone.utc),
         guid="test",
-        source=ArticleSource.LOL_EN_US,
+        source=ArticleSource.create("lol", "en-us"),
         categories=["News"],
     )
 
     # Generate filtered feeds
     generator.generate_feed_by_source(
-        [article], ArticleSource.LOL_EN_US, "http://localhost/feed.xml"
+        [article], ArticleSource.create("lol", "en-us"), "http://localhost/feed.xml"
     )
 
     # Title should be restored

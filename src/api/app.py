@@ -19,8 +19,8 @@ from slowapi.util import get_remote_address
 
 from src.config import get_settings
 from src.database import ArticleRepository
-from src.models import ArticleSource
-from src.rss.feed_service import FeedService
+from src.models import ArticleSource, SourceCategory
+from src.rss.feed_service import FeedService, FeedServiceV2
 from src.services.scheduler import NewsScheduler
 
 logger = logging.getLogger(__name__)
@@ -55,17 +55,21 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     # Initialize feed service
     feed_service = FeedService(repository=repository, cache_ttl=settings.feed_cache_ttl)
 
+    # Initialize feed service V2 for multi-locale support
+    feed_service_v2 = FeedServiceV2(repository=repository, cache_ttl=settings.feed_cache_ttl)
+
     # Initialize and start scheduler
     scheduler = NewsScheduler(repository, interval_minutes=settings.update_interval_minutes)
     scheduler.start()
 
-    # Trigger initial update
-    logger.info("Triggering initial update...")
-    await scheduler.trigger_update_now()
+    # Note: Not triggering initial update on startup to avoid blocking
+    # The scheduler will fetch news according to its interval
+    logger.info("Scheduler started, will fetch news on next scheduled interval")
 
     # Store in app state
     app_state["repository"] = repository
     app_state["feed_service"] = feed_service
+    app_state["feed_service_v2"] = feed_service_v2
     app_state["scheduler"] = scheduler
 
     logger.info("Server initialized successfully")
@@ -114,6 +118,22 @@ def get_feed_service() -> FeedService:
     if not service:
         raise HTTPException(status_code=500, detail="Service not initialized")
     return cast(FeedService, service)
+
+
+def get_feed_service_v2() -> FeedServiceV2:
+    """
+    Get feed service V2 from app state.
+
+    Returns:
+        FeedServiceV2 instance
+
+    Raises:
+        HTTPException: If service is not initialized
+    """
+    service = app_state.get("feed_service_v2")
+    if not service:
+        raise HTTPException(status_code=500, detail="Service V2 not initialized")
+    return cast(FeedServiceV2, service)
 
 
 @app.get("/api/articles", response_model=list[dict[str, Any]])
@@ -205,8 +225,8 @@ async def get_source_feed(source: str, limit: int = 50) -> Response:
     try:
         # Validate source
         source_map = {
-            "en-us": ArticleSource.LOL_EN_US,
-            "it-it": ArticleSource.LOL_IT_IT,
+            "en-us": ArticleSource.create("lol", "en-us"),
+            "it-it": ArticleSource.create("lol", "it-it"),
         }
 
         if source not in source_map:
@@ -400,3 +420,291 @@ async def trigger_update(request: Request) -> dict[str, Any]:
 
     stats = await scheduler.trigger_update_now()
     return cast(dict[str, Any], stats)
+
+
+# =============================================================================
+# Multi-Locale RSS Feed Endpoints (V2)
+# =============================================================================
+
+
+@app.get("/rss/{locale}.xml", response_class=Response)
+async def get_locale_feed(
+    locale: str = Path(
+        ...,
+        pattern=r"^[a-z]{2}-[a-z]{2}$",
+        description="Locale code in format 'xx-xx' (e.g., en-us, it-it)",
+    ),
+    limit: int = 50,
+) -> Response:
+    """
+    Get RSS feed for a specific locale.
+
+    Provides a localized RSS feed containing articles for the specified locale.
+    Uses locale-specific feed titles and descriptions from settings.
+
+    Args:
+        locale: Locale code (e.g., "en-us", "it-it", "es-es")
+        limit: Maximum number of articles (default: 50, max: 500)
+
+    Returns:
+        RSS 2.0 XML feed for the specified locale
+
+    Raises:
+        HTTPException: If locale is not supported or feed generation fails
+    """
+    try:
+        # Validate limit
+        limit = min(max(1, limit), 500)
+
+        # Validate locale against supported locales
+        service = get_feed_service_v2()
+        supported_locales = service.get_supported_locales()
+
+        if locale not in supported_locales:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Locale '{locale}' not supported. Available locales: {supported_locales}",
+            )
+
+        # Generate feed
+        feed_xml = await service.get_feed_by_locale(locale=locale, limit=limit)
+
+        return Response(
+            content=feed_xml,
+            media_type="application/xml; charset=utf-8",
+            headers={
+                "Cache-Control": f"public, max-age={settings.feed_cache_ttl}",
+                "Content-Type": "application/xml; charset=utf-8",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating locale feed for {locale}: {e}")
+        raise HTTPException(status_code=500, detail="Error generating feed") from e
+
+
+@app.get("/rss/{locale}/{source}.xml", response_class=Response)
+async def get_source_locale_feed(
+    locale: str = Path(
+        ...,
+        pattern=r"^[a-z]{2}-[a-z]{2}$",
+        description="Locale code in format 'xx-xx' (e.g., en-us, it-it)",
+    ),
+    source: str = Path(
+        ...,
+        max_length=50,
+        pattern=r"^[a-z0-9\-_]+$",
+        description="Source identifier (e.g., lol, u-gg, dexerto)",
+    ),
+    limit: int = 50,
+) -> Response:
+    """
+    Get RSS feed for a specific source and locale.
+
+    Filters articles by both source ID and locale, generating a localized
+    RSS feed for that specific source.
+
+    Args:
+        locale: Locale code (e.g., "en-us", "it-it")
+        source: Source identifier (e.g., "lol", "u-gg", "dexerto")
+        limit: Maximum number of articles (default: 50, max: 500)
+
+    Returns:
+        RSS 2.0 XML feed for the specified source and locale
+
+    Raises:
+        HTTPException: If locale is not supported or feed generation fails
+    """
+    try:
+        # Validate limit
+        limit = min(max(1, limit), 500)
+
+        # Validate locale against supported locales
+        service = get_feed_service_v2()
+        supported_locales = service.get_supported_locales()
+
+        if locale not in supported_locales:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Locale '{locale}' not supported. Available locales: {supported_locales}",
+            )
+
+        # Generate feed
+        feed_xml = await service.get_feed_by_source_and_locale(
+            source_id=source, locale=locale, limit=limit
+        )
+
+        return Response(
+            content=feed_xml,
+            media_type="application/xml; charset=utf-8",
+            headers={
+                "Cache-Control": f"public, max-age={settings.feed_cache_ttl}",
+                "Content-Type": "application/xml; charset=utf-8",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating source locale feed for {source}/{locale}: {e}")
+        raise HTTPException(status_code=500, detail="Error generating feed") from e
+
+
+@app.get("/rss/{locale}/category/{category}.xml", response_class=Response)
+async def get_category_locale_feed(
+    locale: str = Path(
+        ...,
+        pattern=r"^[a-z]{2}-[a-z]{2}$",
+        description="Locale code in format 'xx-xx' (e.g., en-us, it-it)",
+    ),
+    category: str = Path(
+        ...,
+        max_length=50,
+        pattern=r"^[a-z0-9\-_]+$",
+        description="Category name (e.g., official_riot, analytics)",
+    ),
+    limit: int = 50,
+) -> Response:
+    """
+    Get RSS feed for a specific category and locale.
+
+    Filters articles by both category and locale, generating a localized
+    RSS feed for that specific category.
+
+    Args:
+        locale: Locale code (e.g., "en-us", "it-it")
+        category: Category name (e.g., "official_riot", "analytics", "community_hub")
+        limit: Maximum number of articles (default: 50, max: 500)
+
+    Returns:
+        RSS 2.0 XML feed for the specified category and locale
+
+    Raises:
+        HTTPException: If locale is not supported or feed generation fails
+    """
+    try:
+        # Validate limit
+        limit = min(max(1, limit), 500)
+
+        # Validate locale against supported locales
+        service = get_feed_service_v2()
+        supported_locales = service.get_supported_locales()
+
+        if locale not in supported_locales:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Locale '{locale}' not supported. Available locales: {supported_locales}",
+            )
+
+        # Validate category against SourceCategory enum values
+        valid_categories = [c.value for c in SourceCategory]
+        if category not in valid_categories:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid category '{category}'. Valid categories: {valid_categories}",
+            )
+
+        # Generate feed
+        feed_xml = await service.get_feed_by_category_and_locale(
+            category=category, locale=locale, limit=limit
+        )
+
+        return Response(
+            content=feed_xml,
+            media_type="application/xml; charset=utf-8",
+            headers={
+                "Cache-Control": f"public, max-age={settings.feed_cache_ttl}",
+                "Content-Type": "application/xml; charset=utf-8",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating category locale feed for {category}/{locale}: {e}")
+        raise HTTPException(status_code=500, detail="Error generating feed") from e
+
+
+@app.get("/feeds")
+async def list_available_feeds() -> dict[str, Any]:
+    """
+    List all available feeds and their endpoints.
+
+    Provides a discovery endpoint listing all supported locales, sources,
+    categories, and their corresponding feed URLs.
+
+    Returns:
+        Dictionary containing:
+            - locales: List of supported locale codes
+            - sources: List of available source IDs
+            - categories: List of valid category names
+            - feeds: List of feed URL specifications
+
+    Raises:
+        HTTPException: If service is not initialized
+    """
+    try:
+        service = get_feed_service_v2()
+        repo = app_state.get("repository")
+        if not repo:
+            raise HTTPException(status_code=500, detail="Repository not initialized")
+
+        # Get supported locales
+        supported_locales = service.get_supported_locales()
+
+        # Get available locales (with actual articles)
+        available_locales = await service.get_available_locales()
+
+        # Get all source IDs
+        all_sources = list(ArticleSource.ALL_SOURCES.keys())
+
+        # Get all categories
+        all_categories = [c.value for c in SourceCategory]
+
+        # Build feed list
+        feeds: list[dict[str, str]] = []
+
+        # Per-locale feeds
+        for locale in supported_locales:
+            feeds.append({"type": "locale", "locale": locale, "url": f"/rss/{locale}.xml"})
+
+        # Per-source per-locale feeds
+        for source in all_sources:
+            for locale in supported_locales:
+                feeds.append(
+                    {
+                        "type": "source_locale",
+                        "source": source,
+                        "locale": locale,
+                        "url": f"/rss/{locale}/{source}.xml",
+                    }
+                )
+
+        # Per-category per-locale feeds
+        for category in all_categories:
+            for locale in supported_locales:
+                feeds.append(
+                    {
+                        "type": "category_locale",
+                        "category": category,
+                        "locale": locale,
+                        "url": f"/rss/{locale}/category/{category}.xml",
+                    }
+                )
+
+        return {
+            "supported_locales": supported_locales,
+            "available_locales": available_locales,
+            "sources": all_sources,
+            "categories": all_categories,
+            "feeds": feeds,
+            "base_url": settings.base_url,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error listing feeds: {e}")
+        raise HTTPException(status_code=500, detail="Error listing feeds") from e

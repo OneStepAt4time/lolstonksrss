@@ -24,7 +24,7 @@ async def test_complete_workflow_memory_database(tmp_path):
                 url=f"https://example.com/article-{_i}",
                 pub_date=datetime.utcnow(),
                 guid=f"test-guid-{_i}",
-                source=ArticleSource.LOL_EN_US,
+                source=ArticleSource.create("lol", "en-us"),
                 description=f"Test description {_i}",
                 content=f"<p>Test content {_i}</p>",
                 image_url=f"https://example.com/image-{_i}.jpg",
@@ -62,7 +62,7 @@ async def test_multi_source_workflow(tmp_path):
                 url="https://example.com/en",
                 pub_date=datetime.utcnow(),
                 guid="en-guid",
-                source=ArticleSource.LOL_EN_US,
+                source=ArticleSource.create("lol", "en-us"),
                 description="English",
                 categories=["News"],
             ),
@@ -71,7 +71,7 @@ async def test_multi_source_workflow(tmp_path):
                 url="https://example.com/it",
                 pub_date=datetime.utcnow(),
                 guid="it-guid",
-                source=ArticleSource.LOL_IT_IT,
+                source=ArticleSource.create("lol", "it-it"),
                 description="Italian",
                 categories=["News"],
             ),
@@ -79,7 +79,9 @@ async def test_multi_source_workflow(tmp_path):
         await repo.save_many(articles)
         feed_service = FeedService(repo)
         en_feed = feedparser.parse(
-            await feed_service.get_feed_by_source(ArticleSource.LOL_EN_US, "http://test/feed.xml")
+            await feed_service.get_feed_by_source(
+                ArticleSource.create("lol", "en-us"), "http://test/feed.xml"
+            )
         )
         assert len(en_feed.entries) == 1
         main_feed = feedparser.parse(await feed_service.get_main_feed("http://test/feed.xml"))
