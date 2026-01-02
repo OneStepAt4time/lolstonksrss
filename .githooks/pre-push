@@ -67,13 +67,15 @@ fi
 print_success "Mypy type checking passed"
 
 # 2. Run test suite (excluding slow tests and tests that require external server)
-# Note: E2E tests requiring running server (test_http_endpoints, test_rss_compliance, test_scheduler_api)
-# and slow tests that make network requests are run in CI/CD. Pre-push runs fast unit/integration tests only.
+# Note: E2E tests requiring running server (test_http_endpoints, test_rss_compliance,
+# test_scheduler_api, test_multi_locale_validation) are run in CI/CD with server infrastructure.
+# Slow tests that make network requests are also run in CI/CD. Pre-push runs fast unit/integration tests only.
 print_info "Running test suite (unit + integration + fast offline E2E)..."
 if ! uv run pytest -v -m "not slow" --cov=src --cov-report=term --cov-report=html \
     --ignore=tests/e2e/test_http_endpoints.py \
     --ignore=tests/e2e/test_rss_compliance.py \
-    --ignore=tests/e2e/test_scheduler_api.py; then
+    --ignore=tests/e2e/test_scheduler_api.py \
+    --ignore=tests/e2e/test_multi_locale_validation.py; then
     print_error "Tests failed"
     exit 1
 fi
@@ -84,7 +86,8 @@ print_info "Checking test coverage..."
 COVERAGE=$(uv run pytest -m "not slow" --cov=src --cov-report=term \
     --ignore=tests/e2e/test_http_endpoints.py \
     --ignore=tests/e2e/test_rss_compliance.py \
-    --ignore=tests/e2e/test_scheduler_api.py | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
+    --ignore=tests/e2e/test_scheduler_api.py \
+    --ignore=tests/e2e/test_multi_locale_validation.py | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
 if [ -n "$COVERAGE" ]; then
     COVERAGE_INT=${COVERAGE%.*}
     if [ "$COVERAGE_INT" -lt 90 ]; then
