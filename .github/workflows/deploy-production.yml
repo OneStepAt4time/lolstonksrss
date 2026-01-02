@@ -56,12 +56,47 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=prod-
 
-      - name: Verify CI checks passed
+      - name: Verify deployment prerequisites
         id: check
         run: |
-          echo "Checking repository status..."
+          echo "Checking deployment prerequisites..."
+
+          # Check if required secrets are configured
+          REQUIRED_SECRETS=(
+            "WINDOWS_SERVER_SSH_KEY"
+            "WINDOWS_SERVER_HOST"
+            "WINDOWS_SERVER_USER"
+            "WINDOWS_SERVER_DEPLOY_PATH"
+          )
+
+          ALL_SECRETS_SET=true
+          for secret in "${REQUIRED_SECRETS[@]}"; do
+            if [ -z "${{ secrets[secret] }}" ]; then
+              echo "[X] Secret $secret is not configured"
+              ALL_SECRETS_SET=false
+            else
+              echo "[OK] Secret $secret is configured"
+            fi
+          done
+
+          if [ "$ALL_SECRETS_SET" = false ]; then
+            echo ""
+            echo "[WARNING] Deployment prerequisites not met:"
+            echo "  - Required Windows Server secrets are not configured"
+            echo "  - Automatic deployment is SKIPPED"
+            echo "  - To enable automatic deployment, configure the following secrets:"
+            echo "    • WINDOWS_SERVER_SSH_KEY"
+            echo "    • WINDOWS_SERVER_HOST"
+            echo "    • WINDOWS_SERVER_USER"
+            echo "    • WINDOWS_SERVER_DEPLOY_PATH"
+            echo ""
+            echo "  - You can still trigger deployment manually via workflow_dispatch"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "[OK] All deployment prerequisites met"
           echo "Image tag: ${{ steps.meta.outputs.version }}"
-          echo "Should deploy: true"
           echo "should_deploy=true" >> $GITHUB_OUTPUT
 
   # Build and push Docker image
@@ -398,3 +433,18 @@ jobs:
             echo "Please investigate the deployment logs."
             exit 1
           fi
+
+  workflow-success:
+    name: Workflow Status
+    needs: pre-deploy
+    if: always() && needs.pre-deploy.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark workflow as successful
+        run: |
+          if [ "${{ needs.pre-deploy.outputs.should_deploy }}" = "true" ]; then
+            echo "[OK] Deployment workflow proceeding with image tag: ${{ needs.pre-deploy.outputs.image_tag }}"
+          else
+            echo "[INFO] Deployment workflow skipped (Windows Server secrets not configured)"
+          fi
+          echo "Workflow validation completed successfully"
