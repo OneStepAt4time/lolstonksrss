@@ -39,6 +39,7 @@ logger: Final[logging.Logger] = logging.getLogger(__name__)
 
 
 # Feed configuration for GitHub Pages
+# Note: ArticleSource.create() is called at runtime to avoid import-time issues
 FEED_CONFIGS: Final[dict[str, dict]] = {
     "all": {
         "filename": "feed.xml",
@@ -52,14 +53,16 @@ FEED_CONFIGS: Final[dict[str, dict]] = {
         "title": "League of Legends News",
         "description": "Latest League of Legends news and updates (English)",
         "language": "en",
-        "source": ArticleSource.LOL_EN_US,
+        "source_id": "lol",
+        "locale": "en-us",
     },
     "it-it": {
         "filename": "feed/it-it.xml",
         "title": "Notizie League of Legends",
         "description": "Ultime notizie e aggiornamenti di League of Legends (Italiano)",
         "language": "it",
-        "source": ArticleSource.LOL_IT_IT,
+        "source_id": "lol",
+        "locale": "it-it",
     },
 }
 
@@ -161,10 +164,12 @@ async def generate_feeds(
 
         try:
             # Fetch articles
-            source = config.get("source")
-            if source:
-                articles = await repository.get_latest(limit=limit, source=source.value)
-                logger.info(f"Fetched {len(articles)} articles for {source.value}")
+            source_id = config.get("source_id")
+            locale = config.get("locale")
+            if source_id and locale:
+                source = ArticleSource.create(source_id, locale)
+                articles = await repository.get_latest(limit=limit, source=str(source))
+                logger.info(f"Fetched {len(articles)} articles for {source}")
             else:
                 articles = await repository.get_latest(limit=limit)
                 logger.info(f"Fetched {len(articles)} total articles")
