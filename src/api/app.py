@@ -351,6 +351,25 @@ async def health_check() -> dict[str, Any]:
         return {"status": "unhealthy", "error": str(e)}
 
 
+@app.get("/ping")
+async def ping() -> dict[str, str]:
+    """
+    Simple ping endpoint for liveness checks.
+
+    Returns a minimal response to indicate the service is running.
+    This endpoint makes no database calls and is designed for quick
+    liveness probes from orchestrators like Kubernetes.
+
+    Returns:
+        Dictionary with status indicator
+
+    Example:
+        >>> ping()
+        {"status": "ok"}
+    """
+    return {"status": "ok"}
+
+
 @app.post("/admin/refresh")
 @limiter.limit("5/minute")
 async def refresh_feeds(request: Request) -> dict[str, str]:
