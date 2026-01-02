@@ -56,14 +56,15 @@ def test_auto_init_metrics():
 
 def test_articles_fetched_counter():
     """Test articles fetched counter increment."""
-    # Increment counter
-    articles_fetched_total.labels(source="lol", locale="en-us").inc(10)
-    articles_fetched_total.labels(source="lol", locale="it-it").inc(5)
+    # Use unique labels to avoid global state pollution from other tests
+    unique_test_id = "test_articles_fetched_counter"
+    articles_fetched_total.labels(source=unique_test_id, locale="en-us").inc(10)
+    articles_fetched_total.labels(source=unique_test_id, locale="it-it").inc(5)
 
     # Get metrics and verify
     metrics = get_metrics_text().decode("utf-8")
-    assert 'articles_fetched_total{locale="en-us",source="lol"} 10.0' in metrics
-    assert 'articles_fetched_total{locale="it-it",source="lol"} 5.0' in metrics
+    assert f'articles_fetched_total{{locale="en-us",source="{unique_test_id}"}} 10.0' in metrics
+    assert f'articles_fetched_total{{locale="it-it",source="{unique_test_id}"}} 5.0' in metrics
 
 
 def test_scraping_requests_counter():

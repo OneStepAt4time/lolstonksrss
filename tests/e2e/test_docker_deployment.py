@@ -74,6 +74,7 @@ def test_docker_health_check():
 
 @pytest.mark.e2e
 @pytest.mark.docker
+@pytest.mark.slow
 def test_docker_endpoints_accessible():
     """Test all endpoints are accessible in Docker."""
     # Wait for startup
@@ -186,6 +187,7 @@ def test_docker_logs_no_errors():
 
 @pytest.mark.e2e
 @pytest.mark.docker
+@pytest.mark.slow
 def test_docker_manual_refresh():
     """Test manual scheduler trigger."""
     time.sleep(STARTUP_WAIT)
