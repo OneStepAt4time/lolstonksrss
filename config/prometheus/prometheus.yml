@@ -1,0 +1,51 @@
+# Prometheus configuration for LoL Stonks RSS metrics
+#
+# This configuration scrapes metrics from the LoL Stonks RSS application
+# and stores them for visualization in Grafana.
+
+global:
+  scrape_interval: 15s  # Default scrape interval
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    monitor: "lolstonksrss-monitor"
+    environment: "production"
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ["alertmanager:9093"]
+
+# Load rules once and periodically evaluate them
+# rule_files:
+#   - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Scrape Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          instance: "prometheus"
+
+  # Scrape LoL Stonks RSS application
+  - job_name: "lolstonksrss"
+    scrape_interval: 30s
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          instance: "lolstonksrss-app"
+          service: "rss-feed"
+    # Optional: Basic auth if /metrics endpoint is protected
+    # basic_auth:
+    #   username: "prometheus"
+    #   password: "password"
+
+  # Optional: Scrape node exporter for host metrics
+  # - job_name: "node"
+  #   static_configs:
+  #     - targets: ["host.docker.internal:9100"]
+  #       labels:
+  #         instance: "host"

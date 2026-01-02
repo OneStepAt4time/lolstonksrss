@@ -21,6 +21,14 @@ from src.database import ArticleRepository
 from src.models import Article, ArticleSource, SourceCategory
 from src.scrapers import ALL_SCRAPER_SOURCES, get_scraper
 from src.utils.circuit_breaker import CircuitBreakerOpenError, get_circuit_breaker_registry
+from src.utils.metrics import (
+    active_update_tasks,
+    articles_fetched_total,
+    scraping_requests_total,
+    track_scraping_duration,
+    update_all_circuit_breaker_metrics,
+    update_scraper_last_success,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -369,16 +377,34 @@ class UpdateServiceV2:
         articles: list[Article] = []
 
         try:
-            # Use LoL API client for official Riot sources
-            if task.source_id == "lol":
-                articles = await self._fetch_lol_news(task.locale)
-            # Use scraper for other sources
-            elif task.source_id in ALL_SCRAPER_SOURCES:
-                scraper = get_scraper(task.source_id, task.locale)
-                articles = await scraper.fetch_articles()
-            else:
-                logger.warning(f"Unknown source: {task.source_id}")
-                return 0
+            # Track scraping duration
+            with track_scraping_duration(task.source_id, task.locale):
+                # Use LoL API client for official Riot sources
+                if task.source_id == "lol":
+                    articles = await self._fetch_lol_news(task.locale)
+                # Use scraper for other sources
+                elif task.source_id in ALL_SCRAPER_SOURCES:
+                    scraper = get_scraper(task.source_id, task.locale)
+                    articles = await scraper.fetch_articles()
+                else:
+                    logger.warning(f"Unknown source: {task.source_id}")
+                    scraping_requests_total.labels(
+                        source=task.source_id, locale=task.locale, status="unknown_source"
+                    ).inc()
+                    return 0
+
+            # Record successful scraping request
+            scraping_requests_total.labels(
+                source=task.source_id, locale=task.locale, status="success"
+            ).inc()
+
+            # Update articles fetched counter
+            articles_fetched_total.labels(source=task.source_id, locale=task.locale).inc(
+                len(articles)
+            )
+
+            # Update scraper last success timestamp
+            update_scraper_last_success(task.source_id, task.locale)
 
             # Save articles and count new ones
             new_count = 0
@@ -401,12 +427,18 @@ class UpdateServiceV2:
             logger.warning(
                 f"Circuit breaker OPEN for {task.source_id}:{task.locale}. Skipping update. {e}"
             )
+            scraping_requests_total.labels(
+                source=task.source_id, locale=task.locale, status="circuit_breaker_open"
+            ).inc()
             return 0
         except Exception as e:
             logger.error(
                 f"Error updating {task.source_id}:{task.locale}: {e}",
                 exc_info=True,
             )
+            scraping_requests_total.labels(
+                source=task.source_id, locale=task.locale, status="error"
+            ).inc()
             raise
 
     async def _create_tasks(
@@ -473,6 +505,7 @@ class UpdateServiceV2:
         async def worker(task: UpdateTask) -> int:
             """Worker coroutine that processes a single task."""
             async with semaphore:
+                active_update_tasks.inc()
                 try:
                     new_count = await self._update_source(task)
                     stats["success"] += 1
@@ -481,12 +514,20 @@ class UpdateServiceV2:
                 except Exception:
                     stats["failed"] += 1
                     return 0
+                finally:
+                    active_update_tasks.dec()
+
+        # Update circuit breaker metrics before execution
+        update_all_circuit_breaker_metrics(self.cb_registry)
 
         # Execute all tasks concurrently with semaphore limiting
         await asyncio.gather(
             *[worker(task) for task in tasks],
             return_exceptions=False,
         )
+
+        # Update circuit breaker metrics after execution
+        update_all_circuit_breaker_metrics(self.cb_registry)
 
         return stats
 
