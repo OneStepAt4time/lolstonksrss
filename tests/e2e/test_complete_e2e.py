@@ -179,6 +179,7 @@ async def test_multi_source_feed_generation(populated_db):
 
 
 @pytest.mark.e2e
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_scheduler_manual_trigger(temp_db):
     scheduler = NewsScheduler(temp_db, interval_minutes=30)
