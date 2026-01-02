@@ -156,6 +156,21 @@ async def test_health_check_no_articles(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_ping_endpoint(client: AsyncClient) -> None:
+    """
+    Test ping endpoint returns status ok.
+
+    Args:
+        client: Test client fixture
+    """
+    response = await client.get("/ping")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data == {"status": "ok"}
+
+
+@pytest.mark.asyncio
 async def test_get_main_feed(client: AsyncClient, mock_feed_service: AsyncMock) -> None:
     """
     Test getting main RSS feed.
