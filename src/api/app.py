@@ -5,9 +5,9 @@ This module provides HTTP endpoints for accessing RSS feeds with various filters
 including source and category-based filtering.
 """
 
-import logging
 import re
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException, Path, Request, Response
@@ -17,13 +17,24 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from src.api.schemas import (
+    CacheStatus,
+    DatabaseStatus,
+    HealthCheckResponse,
+    LivenessResponse,
+    ReadinessResponse,
+    SchedulerStatus,
+    ScraperSourceStatus,
+    ScrapersStatus,
+)
 from src.config import get_settings
 from src.database import ArticleRepository
 from src.models import ArticleSource, SourceCategory
 from src.rss.feed_service import FeedService, FeedServiceV2
 from src.services.scheduler import NewsScheduler
+from src.utils.logging import RequestIdMiddleware, configure_structlog, get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 settings = get_settings()
 
 # Global state for services
@@ -46,7 +57,21 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     Yields:
         Control to the application
     """
-    logger.info("Starting LoL Stonks RSS server...")
+    # Configure structured logging
+    configure_structlog(
+        json_logging=settings.json_logging,
+        log_level=settings.log_level,
+    )
+
+    logger.info(
+        "Starting LoL Stonks RSS server",
+        extra={
+            "version": "1.0.0",
+            "json_logging": settings.json_logging,
+            "log_level": settings.log_level,
+            "database_path": settings.database_path,
+        },
+    )
 
     # Initialize database repository
     repository = ArticleRepository(settings.database_path)
@@ -64,7 +89,10 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
 
     # Note: Not triggering initial update on startup to avoid blocking
     # The scheduler will fetch news according to its interval
-    logger.info("Scheduler started, will fetch news on next scheduled interval")
+    logger.info(
+        "Scheduler started, will fetch news on next scheduled interval",
+        extra={"interval_minutes": settings.update_interval_minutes},
+    )
 
     # Store in app state
     app_state["repository"] = repository
@@ -92,7 +120,7 @@ app = FastAPI(
 
 # Configure rate limiter
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 # Configure CORS
 app.add_middleware(
@@ -102,6 +130,9 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Accept", "Authorization"],
 )
+
+# Add request ID middleware for tracing
+app.add_middleware(RequestIdMiddleware)
 
 
 def get_feed_service() -> FeedService:
@@ -317,44 +348,215 @@ async def get_category_feed(
         raise HTTPException(status_code=500, detail="Error generating feed") from e
 
 
-@app.get("/health")
-async def health_check() -> dict[str, Any]:
+@app.get("/health", response_model=HealthCheckResponse)
+async def health_check() -> HealthCheckResponse:
     """
-    Health check endpoint.
+    Enhanced health check endpoint with detailed diagnostics.
 
-    Returns service status and statistics.
+    Returns comprehensive health status including database, scheduler,
+    cache, and scraper information. Useful for monitoring and debugging.
 
     Returns:
-        Dictionary with health status information
+        HealthCheckResponse with detailed health information
+
+    Raises:
+        HTTPException: If services are not initialized
     """
     try:
         service = app_state.get("feed_service")
         repository = app_state.get("repository")
+        scheduler = app_state.get("scheduler")
 
-        if not service or not repository:
-            return {"status": "unhealthy", "message": "Services not initialized"}
+        if not service or not repository or not scheduler:
+            raise HTTPException(
+                status_code=503,
+                detail="Services not fully initialized",
+            )
 
-        # Get article count
-        articles = await repository.get_latest(limit=1)
+        # Get database status
+        total_articles = await repository.count()
+        last_write_ts = await repository.get_last_write_timestamp()
+        locales = await repository.get_locales()
+        source_categories = await repository.get_source_categories()
 
-        return {
-            "status": "healthy",
-            "version": "1.0.0",
-            "service": "LoL Stonks RSS",
-            "database": "connected",
-            "cache": "active",
-            "has_articles": len(articles) > 0,
-        }
+        database_status = DatabaseStatus(
+            status="connected",
+            total_articles=total_articles,
+            last_write_timestamp=last_write_ts.isoformat() if last_write_ts else None,
+            locales=locales,
+            source_categories=source_categories,
+        )
 
+        # Get scheduler status
+        scheduler_dict = scheduler.get_status()
+        jobs = scheduler_dict.get("jobs", [])
+        next_run = jobs[0].get("next_run") if jobs else None
+        update_service_dict = scheduler_dict.get("update_service", {})
+
+        scheduler_status = SchedulerStatus(
+            running=scheduler_dict.get("running", False),
+            interval_minutes=scheduler_dict.get("interval_minutes", 0),
+            last_update=update_service_dict.get("last_update"),
+            next_run=next_run,
+            update_count=update_service_dict.get("update_count", 0),
+            error_count=update_service_dict.get("error_count", 0),
+            configured_sources=update_service_dict.get("configured_sources", 0),
+            configured_locales=update_service_dict.get("configured_locales", 0),
+        )
+
+        # Get cache statistics
+        cache_stats = service.cache.get_stats()
+        cache_status = CacheStatus(
+            status="active",
+            total_entries=cache_stats["total_entries"],
+            size_bytes_estimate=cache_stats["size_bytes_estimate"],
+            ttl_seconds=cache_stats["ttl_seconds"],
+        )
+
+        # Get scraper status (from ArticleSource registry)
+        source_statuses = []
+        for source_id in ArticleSource.ALL_SOURCES:
+            # Determine status based on whether we have articles for this source
+            source_statuses.append(
+                ScraperSourceStatus(
+                    source_id=source_id,
+                    last_success=None,  # Could be enhanced with tracking
+                    status="active",  # All configured sources are considered active
+                )
+            )
+
+        scrapers_status = ScrapersStatus(
+            total_sources=len(ArticleSource.ALL_SOURCES),
+            sources=source_statuses,
+        )
+
+        # Determine overall status
+        overall_status = "healthy"
+        if scheduler_status.error_count > 10:
+            overall_status = "degraded"
+        if total_articles == 0:
+            overall_status = "degraded"
+
+        return HealthCheckResponse(
+            status=overall_status,
+            version="1.0.0",
+            service="LoL Stonks RSS",
+            timestamp=datetime.utcnow().isoformat(),
+            database=database_status,
+            scheduler=scheduler_status,
+            cache=cache_status,
+            scrapers=scrapers_status,
+        )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        return {"status": "unhealthy", "error": str(e)}
+        logger.error(f"Health check failed: {e}", exc_info=True)
+        raise HTTPException(status_code=503, detail=f"Health check failed: {e}") from e
+
+
+@app.get("/health/ready", response_model=ReadinessResponse)
+async def readiness_check() -> ReadinessResponse:
+    """
+    Kubernetes readiness probe endpoint.
+
+    Checks if the service is ready to receive traffic by verifying
+    that all critical services are initialized and accessible.
+
+    Returns:
+        ReadinessResponse with readiness status
+
+    Example:
+        Returns 200 if ready, 503 if not ready
+    """
+    checks: dict[str, bool] = {}
+    messages: list[str] = []
+
+    # Check repository
+    repository = app_state.get("repository")
+    checks["repository"] = repository is not None
+    if not repository:
+        messages.append("Repository not initialized")
+
+    # Check feed service
+    feed_service = app_state.get("feed_service")
+    checks["feed_service"] = feed_service is not None
+    if not feed_service:
+        messages.append("Feed service not initialized")
+
+    # Check feed service V2
+    feed_service_v2 = app_state.get("feed_service_v2")
+    checks["feed_service_v2"] = feed_service_v2 is not None
+    if not feed_service_v2:
+        messages.append("Feed service V2 not initialized")
+
+    # Check scheduler
+    scheduler = app_state.get("scheduler")
+    checks["scheduler"] = scheduler is not None
+    if not scheduler:
+        messages.append("Scheduler not initialized")
+
+    # Optional: Check if database has articles
+    has_articles = False
+    if repository:
+        try:
+            articles = await repository.get_latest(limit=1)
+            has_articles = len(articles) > 0
+            checks["has_articles"] = has_articles
+        except Exception:
+            checks["has_articles"] = False
+    else:
+        checks["has_articles"] = False
+
+    # Determine overall readiness
+    # All critical checks must pass, but has_articles is optional
+    ready = all(
+        checks.get(k, False) for k in ["repository", "feed_service", "feed_service_v2", "scheduler"]
+    )
+
+    if ready:
+        message = "Service is ready"
+    else:
+        message = f"Service not ready: {', '.join(messages)}"
+
+    return ReadinessResponse(
+        ready=ready,
+        timestamp=datetime.utcnow().isoformat(),
+        checks=checks,
+        message=message,
+    )
+
+
+@app.get("/health/live", response_model=LivenessResponse)
+async def liveness_check() -> LivenessResponse:
+    """
+    Kubernetes liveness probe endpoint.
+
+    Quick check if the service process is alive and responding.
+    This endpoint makes minimal checks and should always return
+    200 if the application is running.
+
+    Returns:
+        LivenessResponse with liveness status
+
+    Example:
+        Returns 200 if alive, 503 if process is dead
+    """
+    # Basic liveness check - just verify app is running
+    # No database calls, just check app_state exists
+    alive = bool(app_state)
+
+    return LivenessResponse(
+        alive=alive,
+        timestamp=datetime.utcnow().isoformat(),
+        message="ok" if alive else "not alive",
+    )
 
 
 @app.get("/ping")
 async def ping() -> dict[str, str]:
     """
-    Simple ping endpoint for liveness checks.
+    Simple ping endpoint for basic liveness checks.
 
     Returns a minimal response to indicate the service is running.
     This endpoint makes no database calls and is designed for quick

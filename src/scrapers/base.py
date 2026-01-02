@@ -18,6 +18,10 @@ from typing import Any
 import httpx
 
 from src.models import Article, ArticleSource
+from src.utils.circuit_breaker import (
+    CircuitBreakerConfig,
+    get_circuit_breaker_registry,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +131,15 @@ class BaseScraper(ABC):
         self.locale = locale
         self._last_fetch_time: float = 0
         self._client: httpx.AsyncClient | None = None
+
+        # Get circuit breaker for this source
+        registry = get_circuit_breaker_registry()
+        cb_config = CircuitBreakerConfig(
+            failure_threshold=5,
+            recovery_timeout=900.0,  # 15 minutes
+            retry_attempts=3,
+        )
+        self._circuit_breaker = registry.get(config.source_id, config=cb_config)
 
     @property
     def client(self) -> httpx.AsyncClient:

@@ -16,6 +16,19 @@ from src.api.app import app, app_state
 from src.models import Article, ArticleSource
 
 
+@pytest.fixture(autouse=True)
+def reset_app_state() -> None:
+    """
+    Reset app_state before each test.
+
+    Ensures tests don't interfere with each other by clearing
+    the global app_state dictionary.
+    """
+    app_state.clear()
+    yield
+    app_state.clear()
+
+
 @pytest.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """
@@ -92,6 +105,7 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
         client: Test client fixture
     """
     from datetime import datetime
+    from unittest.mock import MagicMock
 
     # Setup mock repository with articles
     repo = AsyncMock()
@@ -109,14 +123,46 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
             )
         ]
     )
+    repo.count = AsyncMock(return_value=100)
+    repo.get_last_write_timestamp = AsyncMock(return_value=datetime(2024, 1, 1, 12, 0, 0))
+    repo.get_locales = AsyncMock(return_value=["en-us", "it-it"])
+    repo.get_source_categories = AsyncMock(return_value=["official_riot", "analytics"])
 
     # Setup mock service
     service = AsyncMock()
     service.get_main_feed = AsyncMock(return_value='<?xml version="1.0"?><rss></rss>')
+    service.cache = MagicMock()
+    service.cache.get_stats = MagicMock(
+        return_value={
+            "total_entries": 5,
+            "size_bytes_estimate": 1024,
+            "ttl_seconds": 300,
+        }
+    )
+
+    # Setup mock scheduler
+    scheduler = MagicMock()
+    scheduler.get_status = MagicMock(
+        return_value={
+            "running": True,
+            "interval_minutes": 30,
+            "jobs": [
+                {"id": "update_news", "name": "Update LoL News", "next_run": "2024-01-01T12:30:00"}
+            ],
+            "update_service": {
+                "last_update": "2024-01-01T12:00:00",
+                "update_count": 10,
+                "error_count": 0,
+                "configured_sources": 5,
+                "configured_locales": 2,
+            },
+        }
+    )
 
     # Store in app_state
     app_state["repository"] = repo
     app_state["feed_service"] = service
+    app_state["scheduler"] = scheduler
 
     response = await client.get("/health")
     assert response.status_code == 200
@@ -124,9 +170,15 @@ async def test_health_check_healthy(client: AsyncClient) -> None:
     assert data["status"] == "healthy"
     assert data["version"] == "1.0.0"
     assert data["service"] == "LoL Stonks RSS"
-    assert data["database"] == "connected"
-    assert data["cache"] == "active"
-    assert data["has_articles"] is True
+    assert "timestamp" in data
+    assert "database" in data
+    assert data["database"]["status"] == "connected"
+    assert data["database"]["total_articles"] == 100
+    assert "scheduler" in data
+    assert data["scheduler"]["running"] is True
+    assert "cache" in data
+    assert data["cache"]["status"] == "active"
+    assert "scrapers" in data
 
 
 @pytest.mark.asyncio
@@ -137,22 +189,57 @@ async def test_health_check_no_articles(client: AsyncClient) -> None:
     Args:
         client: Test client fixture
     """
+    from unittest.mock import MagicMock
+
     # Setup mock repository with no articles
     repo = AsyncMock()
     repo.get_latest = AsyncMock(return_value=[])
+    repo.count = AsyncMock(return_value=0)
+    repo.get_last_write_timestamp = AsyncMock(return_value=None)
+    repo.get_locales = AsyncMock(return_value=[])
+    repo.get_source_categories = AsyncMock(return_value=[])
 
     # Setup mock service
     service = AsyncMock()
+    service.cache = MagicMock()
+    service.cache.get_stats = MagicMock(
+        return_value={
+            "total_entries": 0,
+            "size_bytes_estimate": 0,
+            "ttl_seconds": 300,
+        }
+    )
+
+    # Setup mock scheduler
+    scheduler = MagicMock()
+    scheduler.get_status = MagicMock(
+        return_value={
+            "running": True,
+            "interval_minutes": 30,
+            "jobs": [
+                {"id": "update_news", "name": "Update LoL News", "next_run": "2024-01-01T12:30:00"}
+            ],
+            "update_service": {
+                "last_update": None,
+                "update_count": 0,
+                "error_count": 0,
+                "configured_sources": 5,
+                "configured_locales": 2,
+            },
+        }
+    )
 
     # Store in app_state
     app_state["repository"] = repo
     app_state["feed_service"] = service
+    app_state["scheduler"] = scheduler
 
     response = await client.get("/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "healthy"
-    assert data["has_articles"] is False
+    # Status should be "degraded" when there are no articles
+    assert data["status"] == "degraded"
+    assert data["database"]["total_articles"] == 0
 
 
 @pytest.mark.asyncio
@@ -703,3 +790,102 @@ async def test_trigger_scheduler_update_not_initialized(client: AsyncClient) -> 
     assert response.status_code == 500
     data = response.json()
     assert "not initialized" in data["detail"].lower()
+
+
+# =============================================================================
+# Enhanced Health Check Tests (Readiness/Liveness)
+# =============================================================================
+
+
+@pytest.mark.asyncio
+async def test_readiness_check_ready(client: AsyncClient) -> None:
+    """
+    Test readiness check returns ready when all services are initialized.
+
+    Args:
+        client: Test client fixture
+    """
+    from unittest.mock import MagicMock
+
+    # Setup all services
+    repo = AsyncMock()
+    repo.get_latest = AsyncMock(return_value=[])
+
+    service = AsyncMock()
+    scheduler = MagicMock()
+
+    app_state["repository"] = repo
+    app_state["feed_service"] = service
+    app_state["feed_service_v2"] = service
+    app_state["scheduler"] = scheduler
+
+    response = await client.get("/health/ready")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ready"] is True
+    assert "timestamp" in data
+    assert "checks" in data
+    assert data["checks"]["repository"] is True
+    assert data["checks"]["feed_service"] is True
+    assert data["checks"]["feed_service_v2"] is True
+    assert data["checks"]["scheduler"] is True
+
+
+@pytest.mark.asyncio
+async def test_readiness_check_not_ready(client: AsyncClient) -> None:
+    """
+    Test readiness check returns not ready when services are missing.
+
+    Args:
+        client: Test client fixture
+    """
+    # Only setup repository, missing other services
+    repo = AsyncMock()
+    app_state["repository"] = repo
+
+    response = await client.get("/health/ready")
+
+    assert response.status_code == 200  # Returns 200 with ready=false
+    data = response.json()
+    assert data["ready"] is False
+    assert "not ready" in data["message"].lower()
+
+
+@pytest.mark.asyncio
+async def test_liveness_check_alive(client: AsyncClient) -> None:
+    """
+    Test liveness check returns alive when app is running.
+
+    Args:
+        client: Test client fixture
+    """
+    # Ensure app_state is not empty
+    app_state["test"] = "value"
+
+    response = await client.get("/health/live")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["alive"] is True
+    assert "timestamp" in data
+    assert data["message"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_liveness_check_empty_state(client: AsyncClient) -> None:
+    """
+    Test liveness check when app_state is empty.
+
+    Args:
+        client: Test client fixture
+    """
+    # Clear app_state
+    app_state.clear()
+
+    response = await client.get("/health/live")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["alive"] is False
+    assert data["message"] == "not alive"

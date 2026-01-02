@@ -20,6 +20,7 @@ from src.config import RIOT_LOCALES, get_settings
 from src.database import ArticleRepository
 from src.models import Article, ArticleSource, SourceCategory
 from src.scrapers import ALL_SCRAPER_SOURCES, get_scraper
+from src.utils.circuit_breaker import CircuitBreakerOpenError, get_circuit_breaker_registry
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -264,6 +265,7 @@ class UpdateServiceV2:
         self.last_update: datetime | None = None
         self.update_count: int = 0
         self.error_count: int = 0
+        self.cb_registry = get_circuit_breaker_registry()
 
         # Initialize semaphores for known domains
         for domain in self.DEFAULT_RATE_LIMITS:
@@ -394,6 +396,12 @@ class UpdateServiceV2:
             )
             return new_count
 
+        except CircuitBreakerOpenError as e:
+            # Circuit breaker is open - log warning but don't fail the task
+            logger.warning(
+                f"Circuit breaker OPEN for {task.source_id}:{task.locale}. Skipping update. {e}"
+            )
+            return 0
         except Exception as e:
             logger.error(
                 f"Error updating {task.source_id}:{task.locale}: {e}",
@@ -640,6 +648,15 @@ class UpdateServiceV2:
         Returns:
             Status dictionary with configuration and statistics
         """
+        # Get circuit breaker status for all sources
+        circuit_breaker_status = {}
+        for source_id, cb in self.cb_registry.get_all().items():
+            circuit_breaker_status[source_id] = {
+                "state": cb.stats.state.value,
+                "failure_count": cb.stats.failure_count,
+                "is_open": cb.is_open(),
+            }
+
         return {
             "version": "v2",
             "last_update": self.last_update.isoformat() if self.last_update else None,
@@ -649,4 +666,5 @@ class UpdateServiceV2:
             "configured_sources": len(ArticleSource.ALL_SOURCES),
             "configured_locales": len(RIOT_LOCALES),
             "scraper_sources": len(ALL_SCRAPER_SOURCES),
+            "circuit_breakers": circuit_breaker_status,
         }

@@ -7,6 +7,7 @@ and database migrations for multi-source, multi-locale support.
 """
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -503,3 +504,27 @@ class ArticleRepository:
         no explicit cleanup is needed.
         """
         logger.info("Database repository closed")
+
+    async def get_last_write_timestamp(self) -> datetime | None:
+        """
+        Get the timestamp of the most recent article write.
+
+        Queries the database for the latest publication date, which
+        represents the most recent article stored.
+
+        Returns:
+            Datetime of most recent article, or None if database is empty
+        """
+        async with aiosqlite.connect(self.db_path) as db:
+            cursor = await db.execute("SELECT MAX(pub_date) as last_date FROM articles")
+            row = await cursor.fetchone()
+            if row and row[0]:
+                # Parse ISO string back to datetime
+                last_date_str = row[0]
+                try:
+                    # SQLite returns ISO format strings
+                    return datetime.fromisoformat(last_date_str.replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    logger.warning(f"Could not parse timestamp: {last_date_str}")
+                    return None
+            return None

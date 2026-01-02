@@ -204,6 +204,10 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = "INFO"
+    json_logging: bool = Field(
+        default=True,
+        description="Enable JSON structured logging (vs plain text)",
+    )
 
     # CORS Configuration
     allowed_origins: list[str] | str = ["http://localhost:8000"]

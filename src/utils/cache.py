@@ -6,6 +6,7 @@ for API responses and build IDs.
 """
 
 import logging
+import sys
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -18,6 +19,7 @@ class TTLCache:
 
     This cache stores key-value pairs with automatic expiration
     based on TTL. Useful for caching API responses and build IDs.
+    Tracks hit/miss statistics for monitoring.
     """
 
     def __init__(self, default_ttl_seconds: int = 3600) -> None:
@@ -29,6 +31,8 @@ class TTLCache:
         """
         self.default_ttl = default_ttl_seconds
         self._cache: dict[str, tuple[Any, datetime]] = {}
+        self._hits: int = 0
+        self._misses: int = 0
 
     def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
         """
@@ -55,16 +59,19 @@ class TTLCache:
             Cached value if found and not expired, None otherwise
         """
         if key not in self._cache:
+            self._misses += 1
             logger.debug(f"Cache miss: {key}")
             return None
 
         value, expiry = self._cache[key]
 
         if datetime.utcnow() > expiry:
+            self._misses += 1
             logger.debug(f"Cache expired: {key}")
             del self._cache[key]
             return None
 
+        self._hits += 1
         logger.debug(f"Cache hit: {key}")
         return value
 
@@ -106,3 +113,30 @@ class TTLCache:
             logger.debug(f"Removed {len(expired_keys)} expired cache items")
 
         return len(expired_keys)
+
+    def get_stats(self) -> dict[str, Any]:
+        """
+        Get cache statistics.
+
+        Returns:
+            Dictionary with cache metrics including entry count,
+            size estimate, TTL, and hit/miss statistics
+        """
+        # Estimate memory usage (rough approximation)
+        total_requests = self._hits + self._misses
+        hit_rate = self._hits / total_requests if total_requests > 0 else 0.0
+
+        # Estimate size based on string representation (conservative estimate)
+        size_bytes = 0
+        for key, (value, _) in self._cache.items():
+            size_bytes += sys.getsizeof(key) + sys.getsizeof(value)
+
+        return {
+            "total_entries": len(self._cache),
+            "size_bytes_estimate": size_bytes,
+            "ttl_seconds": self.default_ttl,
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": round(hit_rate, 4),
+            "total_requests": total_requests,
+        }

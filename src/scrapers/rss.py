@@ -43,6 +43,7 @@ class RSSScraper(BaseScraper):
 
         Downloads the RSS feed from the configured URL, parses it using
         feedparser, and converts entries to Article objects.
+        Uses circuit breaker for resilience.
 
         Returns:
             List of Article objects parsed from the feed
@@ -54,14 +55,19 @@ class RSSScraper(BaseScraper):
         feed_url = self.config.get_feed_url(self.locale)
         logger.info(f"[{self.config.source_id}:{self.locale}] Fetching RSS feed from {feed_url}")
 
-        try:
-            # Fetch feed content
+        # Wrap the fetch operation with circuit breaker
+        async def _fetch_feed() -> bytes:
             await self._respect_rate_limit()
             response = await self.client.get(feed_url)
             response.raise_for_status()
+            return response.content
+
+        try:
+            # Fetch feed content with circuit breaker protection
+            response_content = await self._circuit_breaker.call(_fetch_feed)
 
             # Parse RSS feed
-            feed = feedparser.parse(response.content)
+            feed = feedparser.parse(response_content)
 
             if feed.bozo:
                 logger.warning(
