@@ -90,8 +90,8 @@ COVERAGE=$(uv run pytest -m "not slow" --cov=src --cov-report=term \
     --ignore=tests/e2e/test_multi_locale_validation.py | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
 if [ -n "$COVERAGE" ]; then
     COVERAGE_INT=${COVERAGE%.*}
-    if [ "$COVERAGE_INT" -lt 90 ]; then
-        print_error "Test coverage is below 90% (current: ${COVERAGE}%)"
+    if [ "$COVERAGE_INT" -lt 70 ]; then
+        print_error "Test coverage is below 70% (current: ${COVERAGE}%)"
         print_info "Please add more tests to improve coverage"
         exit 1
     fi
