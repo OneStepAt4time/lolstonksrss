@@ -57,16 +57,9 @@ _COMMUNITY_HUB_CONFIGS: Final[dict[str, ScrapingConfig]] = {
         rate_limit_seconds=2.0,
         timeout_seconds=30,
     ),
-    # NOTE: League-specific feed returns 404. Site exists but no LoL-only feed available.
-    # Commented out due to broken RSS URL. Main feed exists but contains all topics.
-    # "nme": ScrapingConfig(
-    #     source_id="nme",
-    #     base_url="https://www.nme.com/news/gaming/league-of-legends",
-    #     difficulty=ScrapingDifficulty.EASY,
-    #     rate_limit_seconds=2.0,
-    #     timeout_seconds=30,
-    #     rss_feed_url="https://www.nme.com/news/gaming/league-of-legends/feed",
-    # ),
+    # REMOVED: nme - League-specific feed returns 404 (verified 2025-01-02).
+    # Main gaming feed also returns 404. Site no longer provides working RSS feeds.
+    # See Bug #6 investigation in tmp/test-feeds.py for details.
     "pcgamesn": ScrapingConfig(
         source_id="pcgamesn",
         base_url="https://www.pcgamesn.com/league-of-legends",
@@ -75,26 +68,12 @@ _COMMUNITY_HUB_CONFIGS: Final[dict[str, ScrapingConfig]] = {
         timeout_seconds=30,
         rss_feed_url="https://www.pcgamesn.com/league-of-legends/feed",
     ),
-    # NOTE: League-specific feed doesn't exist. Site exists but doesn't publish LoL content actively.
-    # Commented out due to non-existent RSS URL. Main feed exists but has no LoL content.
-    # "thegamer": ScrapingConfig(
-    #     source_id="thegamer",
-    #     base_url="https://www.thegamer.com/league-of-legends",
-    #     difficulty=ScrapingDifficulty.EASY,
-    #     rate_limit_seconds=2.0,
-    #     timeout_seconds=30,
-    #     rss_feed_url="https://www.thegamer.com/league-of-legends/feed",
-    # ),
-    # NOTE: League-specific feed returns 404. Site exists but no working RSS feed found.
-    # Commented out due to broken RSS URL.
-    # "upcomer": ScrapingConfig(
-    #     source_id="upcomer",
-    #     base_url="https://www.upcomer.com/league-of-legends",
-    #     difficulty=ScrapingDifficulty.EASY,
-    #     rate_limit_seconds=2.0,
-    #     timeout_seconds=30,
-    #     rss_feed_url="https://www.upcomer.com/league-of-legends/feed",
-    # ),
+    # REMOVED: thegamer - League-specific feed returns 404 (verified 2025-01-02).
+    # Main site feed exists but contains 0% League of Legends content.
+    # See Bug #6 investigation in tmp/inspect-feeds.py for details.
+    # REMOVED: upcomer - League-specific feed returns 404 (verified 2025-01-02).
+    # Main site feed exists but contains 0% League of Legends content.
+    # See Bug #6 investigation in tmp/inspect-feeds.py for details.
 }
 
 # Analytics Sources - Statistics and data sites
@@ -261,10 +240,8 @@ SOURCE_CATEGORY_MAP: Final[dict[str, SourceCategory]] = {
     "dotesports": SourceCategory.COMMUNITY_HUB,
     "esportsgg": SourceCategory.COMMUNITY_HUB,
     "ggrecon": SourceCategory.COMMUNITY_HUB,
-    # NOTE: Commented out due to broken RSS feeds - see Bug #6
-    # "nme": SourceCategory.COMMUNITY_HUB,
-    # "thegamer": SourceCategory.COMMUNITY_HUB,
-    # "upcomer": SourceCategory.COMMUNITY_HUB,
+    # REMOVED: nme, thegamer, upcomer - broken RSS feeds (404) with no viable alternatives
+    # See Bug #6 investigation in tmp/ directory for verification details
     "pcgamesn": SourceCategory.COMMUNITY_HUB,
     # Analytics
     "mobalytics": SourceCategory.ANALYTICS,
