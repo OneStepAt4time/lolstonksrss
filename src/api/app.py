@@ -33,6 +33,7 @@ from src.models import ArticleSource, SourceCategory
 from src.rss.feed_service import FeedService, FeedServiceV2
 from src.services.scheduler import NewsScheduler
 from src.utils.logging import RequestIdMiddleware, configure_structlog, get_logger
+from src.utils.metrics import auto_init_metrics, get_metrics_text
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -62,6 +63,9 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
         json_logging=settings.json_logging,
         log_level=settings.log_level,
     )
+
+    # Initialize Prometheus metrics
+    auto_init_metrics()
 
     logger.info(
         "Starting LoL Stonks RSS server",
@@ -406,11 +410,18 @@ async def health_check() -> HealthCheckResponse:
 
         # Get cache statistics
         cache_stats = service.cache.get_stats()
+
+        # Determine backend type and Redis status
+        redis_connected = cache_stats.get("redis_connected", False)
+        backend = "redis" if redis_connected else "memory"
+
         cache_status = CacheStatus(
-            status="active",
+            status="active" if service.cache.is_healthy() else "inactive",
             total_entries=cache_stats["total_entries"],
             size_bytes_estimate=cache_stats["size_bytes_estimate"],
             ttl_seconds=cache_stats["ttl_seconds"],
+            backend=backend,
+            redis_connected=redis_connected,
         )
 
         # Get scraper status (from ArticleSource registry)
@@ -929,3 +940,36 @@ async def list_available_feeds() -> dict[str, Any]:
     except Exception as e:
         logger.error(f"Error listing feeds: {e}")
         raise HTTPException(status_code=500, detail="Error listing feeds") from e
+
+
+@app.get("/metrics", response_class=Response)
+async def metrics() -> Response:
+    """
+    Prometheus metrics endpoint.
+
+    Exposes Prometheus metrics for monitoring and alerting.
+    Metrics include article counts, scraping latency, cache statistics,
+    circuit breaker states, and more.
+
+    Returns:
+        Prometheus metrics text in plain text format
+
+    Example metrics:
+        - articles_fetched_total{source="lol",locale="en-us"} 1523
+        - scraping_duration_seconds_bucket{source="lol",locale="en-us",le="0.5"} 423
+        - cache_hit_rate{cache_name="feed_cache"} 0.8234
+    """
+    try:
+        metrics_text = get_metrics_text(content_type="text/plain")
+
+        return Response(
+            content=metrics_text,
+            media_type="text/plain; version=0.0.4; charset=utf-8",
+            headers={
+                "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+            },
+        )
+
+    except Exception as e:
+        logger.error(f"Error generating metrics: {e}")
+        raise HTTPException(status_code=500, detail="Error generating metrics") from e

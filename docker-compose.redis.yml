@@ -1,0 +1,43 @@
+# Docker Compose configuration for Redis caching backend
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.redis.yml up
+#
+# This extends the base docker-compose.yml with a Redis service for
+# distributed caching. Enable Redis caching by setting CACHE_BACKEND=redis
+# or CACHE_BACKEND=auto in your environment.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: lolstonksrss-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - lolstonksrss-network
+
+  # Override the app service to use Redis
+  app:
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CACHE_BACKEND=auto
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  lolstonksrss-network:
+    driver: bridge

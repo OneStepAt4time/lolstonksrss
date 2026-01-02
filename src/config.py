@@ -185,6 +185,25 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = 21600  # 6 hours
     build_id_cache_seconds: int = 86400  # 24 hours
 
+    # Redis caching configuration
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="Redis connection URL for distributed caching",
+    )
+    cache_backend: str = Field(
+        default="auto",
+        description="Cache backend to use: 'redis', 'memory', or 'auto' (tries Redis, falls back to memory)",
+    )
+
+    @field_validator("cache_backend")
+    @classmethod
+    def validate_cache_backend(cls, v: str) -> str:
+        """Validate cache_backend value."""
+        valid_backends = {"redis", "memory", "auto"}
+        if v not in valid_backends:
+            raise ValueError(f"cache_backend must be one of {valid_backends}, got '{v}'")
+        return v
+
     # RSS feed configuration
     rss_feed_title: str = "League of Legends News"
     rss_feed_description: str = "Latest League of Legends news and updates"

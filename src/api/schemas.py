@@ -42,6 +42,10 @@ class CacheStatus(BaseModel):
     total_entries: int = Field(..., description="Number of entries in cache", ge=0)
     size_bytes_estimate: int = Field(..., description="Estimated cache size in bytes", ge=0)
     ttl_seconds: int = Field(..., description="Default TTL in seconds", ge=0)
+    backend: str = Field(..., description="Cache backend type (redis/memory)")
+    redis_connected: bool = Field(
+        default=False, description="Whether Redis is connected (for redis backend)"
+    )
 
 
 class ScraperSourceStatus(BaseModel):
