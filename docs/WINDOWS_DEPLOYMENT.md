@@ -2,6 +2,23 @@
 
 Complete guide for deploying LoL Stonks RSS on Windows Server using Docker.
 
+## Deployment Methods
+
+This guide covers two deployment approaches:
+
+1. **Automated Deployment** (Recommended for production)
+   - GitHub Actions CI/CD pipeline
+   - Zero-touch deployment
+   - Automated rollback on failure
+   - See: [Automated Deployment Guide](./DEPLOYMENT.md)
+
+2. **Manual Deployment** (For development/staging)
+   - Manual Docker commands
+   - Full control over deployment process
+   - Covered in this document
+
+For production use, see the [Automated Deployment Guide](./DEPLOYMENT.md) for GitHub Actions setup.
+
 ## Prerequisites
 
 ### 1. Windows Server Requirements
