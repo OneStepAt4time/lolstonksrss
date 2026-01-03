@@ -12,8 +12,8 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
-[![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen.svg)](docs/COVERAGE_REPORT.md)
-[![Tests](https://img.shields.io/badge/tests-151%20passed-brightgreen.svg)](docs/TESTING_SUMMARY.md)
+[![Coverage](https://img.shields.io/badge/coverage-90%2B-brightgreen.svg)](docs/COVERAGE_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-638%20passed-brightgreen.svg)](docs/TESTING_SUMMARY.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Live News](https://img.shields.io/badge/live-news%20page-gold.svg)](https://OneStepAt4time.github.io/lolstonksrss/)
 [![News Updates](https://img.shields.io/github/actions/workflow/status/OneStepAt4time/lolstonksrss/publish-news.yml?label=news%20updates)](https://github.com/OneStepAt4time/lolstonksrss/actions/workflows/publish-news.yml)
@@ -38,7 +38,7 @@
 - **Periodic Updates** - Automatic background updates every 5 minutes (configurable)
 - **Docker Deployment** - Fully containerized with multi-stage builds and health checks
 - **Windows Server Ready** - Optimized for Windows Server with PowerShell automation scripts
-- **High Test Coverage** - 92% test coverage with 151 passing tests (unit, integration, E2E, performance)
+- **High Test Coverage** - 90%+ test coverage with 638 passing tests (unit, integration, E2E, performance)
 - **RESTful API** - Full-featured FastAPI server with interactive documentation
 - **Production Hardened** - Non-root execution, health checks, graceful shutdown, error handling
 
