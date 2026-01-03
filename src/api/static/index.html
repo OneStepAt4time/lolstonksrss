@@ -27,6 +27,8 @@
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #010A13; color: #F0E6D2; }
+        .locale-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
+        .locale-btn { font-size: 0.75rem; padding: 0.375rem 0.5rem; }
     </style>
 </head>
 <body class="min-h-screen font-sans antialiased" x-data="newsApp()">
@@ -40,7 +42,7 @@
                 </svg>
                 <span class="font-bold text-xl tracking-tight text-[#C89B3C]">LoL Stonks RSS</span>
             </div>
-            
+
             <div class="flex items-center gap-4">
                 <a href="/feed.xml" target="_blank" class="text-sm font-medium hover:text-[#C89B3C] transition-colors flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
@@ -53,17 +55,52 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
-        
+
         <!-- Controls -->
-        <div class="mb-8 flex flex-col sm:flex-row gap-4 justify-between items-center">
-            <div class="flex gap-2 bg-[#0A1428] p-1 rounded-lg border border-[#C89B3C]/20">
-                <button @click="filter = 'all'" :class="{'bg-[#C89B3C] text-black': filter === 'all', 'text-gray-400 hover:text-white': filter !== 'all'}" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all">All</button>
-                <button @click="filter = 'lol-en-us'" :class="{'bg-[#C89B3C] text-black': filter === 'lol-en-us', 'text-gray-400 hover:text-white': filter !== 'lol-en-us'}" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all">English</button>
-                <button @click="filter = 'lol-it-it'" :class="{'bg-[#C89B3C] text-black': filter === 'lol-it-it', 'text-gray-400 hover:text-white': filter !== 'lol-it-it'}" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all">Italiano</button>
+        <div class="mb-8 flex flex-col gap-6">
+            <!-- Filter Buttons -->
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-wrap gap-2 bg-[#0A1428] p-2 rounded-lg border border-[#C89B3C]/20">
+                    <button @click="filter = 'all'" :class="{'bg-[#C89B3C] text-black': filter === 'all', 'text-gray-400 hover:text-white': filter !== 'all'}" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all">All</button>
+                    <button @click="showLocaleModal = true" :class="{'bg-[#C89B3C]/20 text-[#C89B3C]': showLocaleModal, 'text-gray-400 hover:text-white': !showLocaleModal}" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                        <span x-text="filter === 'all' ? 'All Languages' : (currentLocale?.name || 'Select Language')"></span>
+                        <span x-show="filter !== 'all'" class="text-xs opacity-70">×</span>
+                    </button>
+                </div>
+
+                <div class="text-sm text-gray-400">
+                    Showing <span x-text="filteredArticles.length" class="text-[#C89B3C] font-bold"></span> articles
+                    <span x-show="filter !== 'all'" class="ml-2">
+                        from <span x-text="currentLocale?.name" class="text-[#C89B3C]"></span>
+                    </span>
+                </div>
             </div>
-            
-            <div class="text-sm text-gray-400">
-                Showing <span x-text="filteredArticles.length" class="text-[#C89B3C] font-bold"></span> articles
+        </div>
+
+        <!-- Locale Selection Modal -->
+        <div x-show="showLocaleModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" style="display: none;">
+            <div @click.away="showLocaleModal = false" class="bg-[#0A1428] border border-[#C89B3C]/30 rounded-xl max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-[#C89B3C]/20">
+                    <h3 class="text-xl font-bold text-[#C89B3C] mb-2">Select Language</h3>
+                    <p class="text-sm text-gray-400">Choose a locale to filter articles</p>
+                </div>
+                <div class="p-6 overflow-y-auto flex-grow">
+                    <div class="locale-grid">
+                        <template x-for="locale in locales" :key="locale.id">
+                            <button
+                                @click="selectLocale(locale.id)"
+                                :class="{'bg-[#C89B3C] text-black': filter === locale.id, 'text-gray-300 hover:bg-[#C89B3C]/20 hover:text-white': filter !== locale.id}"
+                                class="locale-btn rounded-lg text-sm font-medium transition-all text-center"
+                                x-text="locale.name">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-[#C89B3C]/20 flex justify-between items-center">
+                    <button @click="showLocaleModal = false" class="text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
+                    <button @click="showLocaleModal = false" class="px-4 py-2 bg-[#C89B3C] text-black rounded-lg text-sm font-medium hover:bg-[#C89B3C]/80 transition-colors">Done</button>
+                </div>
             </div>
         </div>
 
@@ -93,7 +130,7 @@
                             </div>
                         </template>
                         <div class="absolute top-2 right-2">
-                            <span class="px-2 py-1 text-xs font-bold rounded bg-black/60 backdrop-blur text-white border border-white/10 uppercase" x-text="article.source.replace('lol-', '')"></span>
+                            <span class="px-2 py-1 text-xs font-bold rounded bg-black/60 backdrop-blur text-white border border-white/10 uppercase" x-text="article.source.replace('lol-', '').replace('-', '-').replace(/(^|-)(\w)/g, (m, p1, p2) => p2 ? p2.toUpperCase() : '')"></span>
                         </div>
                     </div>
 
@@ -105,7 +142,7 @@
                         </div>
 
                         <h2 class="text-lg font-bold text-[#F0E6D2] mb-2 line-clamp-2 group-hover:text-[#C89B3C] transition-colors" x-text="article.title"></h2>
-                        
+
                         <p class="text-gray-400 text-sm mb-4 line-clamp-3 flex-grow" x-text="article.description || 'No description available.'"></p>
 
                         <div class="mt-auto pt-4 border-t border-white/5 flex justify-between items-center">
@@ -119,7 +156,7 @@
                 </article>
             </template>
         </div>
-        
+
         <!-- Empty State -->
         <div x-show="!loading && filteredArticles.length === 0" x-cloak class="text-center py-20 text-gray-500">
             <svg class="w-16 h-16 mx-auto mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
@@ -129,8 +166,18 @@
     </main>
 
     <footer class="border-t border-[#C89B3C]/20 bg-[#010A13] mt-12 py-8">
-        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
-            <p>&copy; 2025 LoL Stonks RSS. Not affiliated with Riot Games.</p>
+        <div class="container mx-auto px-4">
+            <div class="text-center text-gray-500 text-sm mb-4">
+                <p>&copy; 2025 LoL Stonks RSS. Not affiliated with Riot Games.</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-gray-600 mb-2">Available Feeds:</p>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <template x-for="locale in locales" :key="locale.id">
+                        <a :href="'/rss/' + locale.id.replace('lol-', '') + '.xml'" class="text-xs text-[#0AC8B9] hover:text-[#C89B3C] transition-colors" x-text="locale.name"></a>
+                    </template>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -141,7 +188,31 @@
                 loading: true,
                 error: null,
                 filter: 'all',
-                
+                showLocaleModal: false,
+                currentLocale: null,
+                locales: [
+                    { id: 'lol-en-us', name: 'English (US)' },
+                    { id: 'lol-en-gb', name: 'English (UK)' },
+                    { id: 'lol-es-es', name: 'Spanish (ES)' },
+                    { id: 'lol-es-mx', name: 'Spanish (MX)' },
+                    { id: 'lol-fr-fr', name: 'Français' },
+                    { id: 'lol-de-de', name: 'Deutsch' },
+                    { id: 'lol-it-it', name: 'Italiano' },
+                    { id: 'lol-pt-br', name: 'Português (BR)' },
+                    { id: 'lol-ru-ru', name: 'Русский' },
+                    { id: 'lol-tr-tr', name: 'Türkçe' },
+                    { id: 'lol-pl-pl', name: 'Polski' },
+                    { id: 'lol-ja-jp', name: '日本語' },
+                    { id: 'lol-ko-kr', name: '한국어' },
+                    { id: 'lol-zh-cn', name: '中文(简)' },
+                    { id: 'lol-zh-tw', name: '中文(繁)' },
+                    { id: 'lol-ar-ae', name: 'العربية' },
+                    { id: 'lol-vi-vn', name: 'Tiếng Việt' },
+                    { id: 'lol-th-th', name: 'ไทย' },
+                    { id: 'lol-id-id', name: 'Indonesia' },
+                    { id: 'lol-ph-ph', name: 'Filipino' }
+                ],
+
                 async fetchArticles() {
                     this.loading = true;
                     this.error = null;
@@ -156,24 +227,37 @@
                         this.loading = false;
                     }
                 },
-                
+
                 get filteredArticles() {
                     if (this.filter === 'all') return this.articles;
                     return this.articles.filter(a => a.source === this.filter);
                 },
-                
+
+                selectLocale(localeId) {
+                    this.filter = localeId;
+                    this.currentLocale = this.locales.find(l => l.id === localeId);
+                    this.showLocaleModal = false;
+                },
+
                 formatDate(dateString) {
                     const date = new Date(dateString);
-                    return new Intl.DateTimeFormat('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
+                    return new Intl.DateTimeFormat('en-US', {
+                        month: 'short',
+                        day: 'numeric',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit'
                     }).format(date);
                 },
-                
+
                 init() {
+                    this.$watch('filter', (value) => {
+                        if (value === 'all') {
+                            this.currentLocale = null;
+                        } else {
+                            this.currentLocale = this.locales.find(l => l.id === value);
+                        }
+                    });
                     this.fetchArticles();
                 }
             }

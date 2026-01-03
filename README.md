@@ -33,7 +33,7 @@
 - **Automatic News Fetching** - Fetches latest LoL news from official Riot Games API
 - **Live News Page** - [Beautiful HTML news page](https://OneStepAt4time.github.io/lolstonksrss/) updated every 5 minutes via GitHub Actions
 - **RSS 2.0 Compliant** - Generates standards-compliant RSS feeds compatible with all readers
-- **Multi-Language Support** - EN-US and IT-IT locales with more coming soon
+- **Multi-Language Support** - All 20 Riot locales (EN-US, EN-GB, ES-ES, ES-MX, FR-FR, DE-DE, IT-IT, PT-BR, RU-RU, TR-TR, PL-PL, JA-JP, KO-KR, ZH-CN, ZH-TW, AR-AE, VI-VN, TH-TH, ID-ID, PH-PH)
 - **Smart Caching** - Intelligent caching strategy with configurable TTL for optimal performance
 - **Periodic Updates** - Automatic background updates every 5 minutes (configurable)
 - **Docker Deployment** - Fully containerized with multi-stage builds and health checks
@@ -80,9 +80,13 @@ cd lolstonksrss
 ```
 
 Your RSS feed will be available at:
-- **Main Feed**: http://localhost:8000/feed.xml
-- **EN-US Feed**: http://localhost:8000/feeds/en-us.xml
-- **IT-IT Feed**: http://localhost:8000/feeds/it-it.xml
+- **Main Feed**: http://localhost:8000/feed.xml (all locales, ~1500 articles)
+- **Locale Feeds**: http://localhost:8000/rss/{locale}.xml (20 locales available)
+- **Examples**:
+  - EN-US: http://localhost:8000/rss/en-us.xml
+  - IT-IT: http://localhost:8000/rss/it-it.xml
+  - JA-JP: http://localhost:8000/rss/ja-jp.xml
+  - KO-KR: http://localhost:8000/rss/ko-kr.xml
 - **API Docs**: http://localhost:8000/docs
 - **Live News Page**: [https://OneStepAt4time.github.io/lolstonksrss/](https://OneStepAt4time.github.io/lolstonksrss/) (auto-updated every 5 min)
 
@@ -135,11 +139,33 @@ python main.py
 
 ### RSS Feeds
 
+The application provides feeds for all 20 Riot locales. Each locale fetches ~75 articles from official Riot Games sources.
+
 | Feed URL | Description | Language | Articles |
 |----------|-------------|----------|----------|
-| `/feed.xml` | All articles (all locales) | Mixed | ~150 |
-| `/feeds/en-us.xml` | English news only | EN-US | ~75 |
-| `/feeds/it-it.xml` | Italian news only | IT-IT | ~75 |
+| `/feed.xml` | All articles (all locales) | Mixed | ~1500 |
+| `/rss/en-us.xml` | English (US) | EN-US | ~75 |
+| `/rss/en-gb.xml` | English (UK) | EN-GB | ~75 |
+| `/rss/es-es.xml` | Spanish (Spain) | ES-ES | ~75 |
+| `/rss/es-mx.xml` | Spanish (Latin America) | ES-MX | ~75 |
+| `/rss/fr-fr.xml` | French | FR-FR | ~75 |
+| `/rss/de-de.xml` | German | DE-DE | ~75 |
+| `/rss/it-it.xml` | Italian | IT-IT | ~75 |
+| `/rss/pt-br.xml` | Portuguese (Brazil) | PT-BR | ~75 |
+| `/rss/ru-ru.xml` | Russian | RU-RU | ~75 |
+| `/rss/tr-tr.xml` | Turkish | TR-TR | ~75 |
+| `/rss/pl-pl.xml` | Polish | PL-PL | ~75 |
+| `/rss/ja-jp.xml` | Japanese | JA-JP | ~75 |
+| `/rss/ko-kr.xml` | Korean | KO-KR | ~75 |
+| `/rss/zh-cn.xml` | Chinese (Simplified) | ZH-CN | ~75 |
+| `/rss/zh-tw.xml` | Chinese (Traditional) | ZH-TW | ~75 |
+| `/rss/ar-ae.xml` | Arabic | AR-AE | ~75 |
+| `/rss/vi-vn.xml` | Vietnamese | VI-VN | ~75 |
+| `/rss/th-th.xml` | Thai | TH-TH | ~75 |
+| `/rss/id-id.xml` | Indonesian | ID-ID | ~75 |
+| `/rss/ph-ph.xml` | Filipino | PH-PH | ~75 |
+
+**Usage**: Replace `{locale}` in the URL pattern `/rss/{locale}.xml` with any of the locale codes above.
 
 ### Live News Page
 
@@ -160,7 +186,7 @@ python main.py
 | `/` | GET | Root (redirects to docs) |
 | `/health` | GET | Health check (database, scheduler status) |
 | `/feed.xml` | GET | Main RSS feed (all articles) |
-| `/feeds/{locale}.xml` | GET | Locale-specific RSS feed |
+| `/rss/{locale}.xml` | GET | Locale-specific RSS feed (20 locales) |
 | `/api/articles` | GET | List all articles (JSON) |
 | `/api/articles/{id}` | GET | Get specific article (JSON) |
 | `/admin/scheduler/status` | GET | Scheduler status |
@@ -352,8 +378,8 @@ Server starts on `http://localhost:8000` by default.
 **RSS Readers (Feedly, Inoreader, etc.):**
 ```
 http://your-server:8000/feed.xml
-http://your-server:8000/feeds/en-us.xml
-http://your-server:8000/feeds/it-it.xml
+http://your-server:8000/rss/en-us.xml
+http://your-server:8000/rss/it-it.xml
 ```
 
 **Command Line:**
