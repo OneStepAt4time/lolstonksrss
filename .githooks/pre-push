@@ -66,16 +66,11 @@ if ! uv run mypy src/; then
 fi
 print_success "Mypy type checking passed"
 
-# 2. Run test suite (excluding slow tests and tests that require external server)
-# Note: E2E tests requiring running server (test_http_endpoints, test_rss_compliance,
-# test_scheduler_api, test_multi_locale_validation) are run in CI/CD with server infrastructure.
-# Slow tests that make network requests are also run in CI/CD. Pre-push runs fast unit/integration tests only.
-print_info "Running test suite (unit + integration + fast offline E2E)..."
-if ! uv run pytest -v -m "not slow" --cov=src --cov-report=term --cov-report=html \
-    --ignore=tests/e2e/test_http_endpoints.py \
-    --ignore=tests/e2e/test_rss_compliance.py \
-    --ignore=tests/e2e/test_scheduler_api.py \
-    --ignore=tests/e2e/test_multi_locale_validation.py; then
+# 2. Run full test suite (including slow tests and server-dependent tests)
+# Note: To achieve 90% coverage, we run all tests including slow/network tests.
+# This will take longer (8+ minutes) but ensures comprehensive coverage.
+print_info "Running full test suite (all tests for 90% coverage)..."
+if ! uv run pytest -v --cov=src --cov-report=term --cov-report=html; then
     print_error "Tests failed"
     exit 1
 fi
@@ -83,15 +78,11 @@ print_success "All tests passed"
 
 # 3. Check test coverage
 print_info "Checking test coverage..."
-COVERAGE=$(uv run pytest -m "not slow" --cov=src --cov-report=term \
-    --ignore=tests/e2e/test_http_endpoints.py \
-    --ignore=tests/e2e/test_rss_compliance.py \
-    --ignore=tests/e2e/test_scheduler_api.py \
-    --ignore=tests/e2e/test_multi_locale_validation.py | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
+COVERAGE=$(uv run pytest --cov=src --cov-report=term | grep "TOTAL" | awk '{print $4}' | sed 's/%//')
 if [ -n "$COVERAGE" ]; then
     COVERAGE_INT=${COVERAGE%.*}
-    if [ "$COVERAGE_INT" -lt 70 ]; then
-        print_error "Test coverage is below 70% (current: ${COVERAGE}%)"
+    if [ "$COVERAGE_INT" -lt 90 ]; then
+        print_error "Test coverage is below 90% (current: ${COVERAGE}%)"
         print_info "Please add more tests to improve coverage"
         exit 1
     fi
